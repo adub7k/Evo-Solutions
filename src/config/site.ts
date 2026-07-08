@@ -8,9 +8,9 @@ export const site = {
   business: {
     name: "Evo Solutions",
     tagline: "Premium Window Tint & Automotive Protection",
-    phone: "(555) 214-8899",
-    phoneHref: "tel:+15552148899",
-    email: "hello@evosolutions.com",
+    phone: "(505) 420-5747",
+    phoneHref: "tel:+15054205747",
+    email: "Angelo@evosolution.org",
     address: "1420 Grand Ave · Kansas City, MO 64108",
     hours: [
       { day: "Mon – Fri", value: "8:00 AM – 6:00 PM" },
