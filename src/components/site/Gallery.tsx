@@ -70,7 +70,7 @@ export function Gallery() {
           role="dialog"
           aria-modal="true"
           aria-label={site.gallery[active].caption}
-          className="fixed inset-0 z-[100] grid place-items-center bg-background/95 p-4 sm:p-8 animate-fade-in backdrop-blur-md"
+          className="fixed inset-0 z-[100] grid place-items-center bg-background/98 p-4 sm:p-8 animate-fade-in"
           onClick={() => setActive(null)}
         >
           <button

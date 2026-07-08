@@ -195,7 +195,7 @@ export function EstimateForm() {
 
   return (
     <section id="quote" className="relative py-24 sm:py-32 bg-surface/30 noise">
-      <div className="pointer-events-none absolute top-1/3 left-0 h-[400px] w-[400px] rounded-full bg-accent/10 blur-[120px]" />
+      <div className="pointer-events-none absolute top-1/3 left-0 h-[400px] w-[400px] glow-orb" />
 
       <div className="container-x relative">
         <div className="grid lg:grid-cols-[1fr_1.3fr] gap-12 lg:gap-16 items-start">

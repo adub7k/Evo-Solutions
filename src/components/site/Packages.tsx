@@ -5,7 +5,7 @@ import { Reveal } from "./Reveal";
 export function Packages() {
   return (
     <section id="pricing" className="relative py-24 sm:py-32 bg-surface/30 noise">
-      <div className="pointer-events-none absolute top-0 right-1/4 h-[400px] w-[400px] rounded-full bg-accent/10 blur-[120px]" />
+      <div className="pointer-events-none absolute top-0 right-1/4 h-[400px] w-[400px] glow-orb" />
 
       <div className="container-x relative">
         <Reveal className="max-w-2xl mb-16">

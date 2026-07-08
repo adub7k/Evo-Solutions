@@ -7,7 +7,7 @@ const icons = [Award, UserCheck, ShieldCheck, Sparkles, HeartHandshake, Timer];
 export function WhyChooseUs() {
   return (
     <section className="relative py-24 sm:py-32 overflow-hidden">
-      <div className="pointer-events-none absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-accent/10 blur-[140px]" />
+      <div className="pointer-events-none absolute -top-40 right-0 h-[500px] w-[500px] glow-orb" />
 
       <div className="container-x relative">
         <div className="grid lg:grid-cols-[1fr_1.4fr] gap-12 lg:gap-20 items-start">

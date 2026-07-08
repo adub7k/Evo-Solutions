@@ -26,7 +26,7 @@ export function Hero() {
       </div>
 
       {/* Ambient glow */}
-      <div className="pointer-events-none absolute top-1/3 left-1/4 -z-10 h-[500px] w-[500px] rounded-full bg-accent/10 blur-[120px]" />
+      <div className="pointer-events-none absolute top-1/3 left-1/4 -z-10 h-[500px] w-[500px] glow-orb" />
 
       <div className="container-x relative">
         <div className="max-w-3xl animate-fade-up">

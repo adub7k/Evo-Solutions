@@ -163,17 +163,34 @@
   color: transparent;
 }
 
+/* Film-grain overlay — desktop only. On iOS Safari the combination of
+   SVG feTurbulence + mix-blend-mode across several full-height sections
+   can exhaust GPU tile memory and paint the whole page black. */
 @utility noise {
   position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.04;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
+  @media (min-width: 1024px) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.04;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
+    }
   }
+}
+
+/* Ambient glow without filter: blur() at 120px+ radii forces enormous
+   composited layers (another iOS black-screen trigger); a radial gradient
+   reads the same at a tiny fraction of the GPU cost. */
+@utility glow-orb {
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--accent) 16%, transparent),
+    transparent 72%
+  );
 }
 
 @keyframes fade-up {
