@@ -11,11 +11,17 @@ export const site = {
     phone: "(505) 420-5747",
     phoneHref: "tel:+15054205747",
     email: "Angelo@evosolution.org",
-    address: "1420 Grand Ave · Kansas City, MO 64108",
+    address: "3500 Vista Alameda NE, Suite A · Albuquerque, NM 87113",
+    // Structured parts for LocalBusiness schema (local SEO)
+    addressParts: {
+      street: "3500 Vista Alameda NE A",
+      city: "Albuquerque",
+      state: "NM",
+      zip: "87113",
+    },
     hours: [
-      { day: "Mon – Fri", value: "8:00 AM – 6:00 PM" },
-      { day: "Saturday", value: "9:00 AM – 4:00 PM" },
-      { day: "Sunday", value: "By appointment" },
+      { day: "Mon – Sat", value: "10:00 AM – 6:00 PM" },
+      { day: "Sunday", value: "Closed" },
     ],
     social: {
       instagram: "https://instagram.com",
@@ -24,10 +30,10 @@ export const site = {
     },
   },
   stats: [
-    { value: "4,200+", label: "Vehicles Tinted" },
-    { value: "4.9★", label: "Google Reviews" },
-    { value: "12", label: "Years Experience" },
+    { value: "5.0★", label: "Google Rating" },
+    { value: "18", label: "Five-Star Reviews" },
     { value: "Lifetime", label: "Film Warranty" },
+    { value: "ABQ", label: "Locally Owned" },
   ],
   filmBrands: ["XPEL", "3M", "SunTek", "LLumar", "Solar Gard", "Rayno"],
   reasons: [
@@ -136,7 +142,7 @@ export const site = {
   ],
   whyChoose: [
     { title: "Premium Films Only", body: "We install top-tier ceramic and carbon films — never the bargain stuff." },
-    { title: "Certified Installers", body: "Our team is factory-trained with 12+ years of specialty experience." },
+    { title: "Certified Installers", body: "Factory-trained installers who treat every vehicle like their own." },
     { title: "Lifetime Warranty", body: "Every install is backed by a transferable lifetime manufacturer warranty." },
     { title: "Obsessive Detail", body: "Edge-to-edge precision. No gaps, no bubbles, no compromises." },
     { title: "Climate-Controlled Bay", body: "Dust-free, temperature-controlled install environment for perfect results." },
@@ -225,37 +231,29 @@ export const site = {
       body: "Maximum privacy. Typically rear-windows-only to stay legal — we'll confirm your state's limits before install.",
     },
   ],
+  // Real Google reviews (Google Business Profile, 5.0★ across 18 reviews)
   testimonials: [
     {
-      name: "Marcus Rivera",
-      vehicle: "2024 BMW M4 Competition",
-      service: "Ceramic Tint + PPF",
+      name: "Eric Luchetti",
+      vehicle: "",
+      service: "Google Review",
       quote:
-        "Absolutely flawless work. The heat rejection is night and day and the install is truly invisible. This is the only shop I'll ever use.",
+        "Great communication, fast service, excellent workmanship, and an awesome staff.",
       rating: 5,
     },
     {
-      name: "Sofia Chen",
-      vehicle: "2023 Range Rover Sport",
-      service: "Full Window Tint",
-      quote:
-        "Professional from start to finish. They walked me through every option, no pressure. My interior finally stays cool in July.",
+      name: "J D",
+      vehicle: "",
+      service: "Google Review",
+      quote: "Good dudes that do solid work for a reasonable price.",
       rating: 5,
     },
     {
-      name: "Derek Thompson",
-      vehicle: "2022 Porsche 911 GT3",
-      service: "Full Front PPF + Ceramic",
+      name: "Debi Smith",
+      vehicle: "",
+      service: "Google Review",
       quote:
-        "I researched every shop in the state. Evo was the obvious choice. The attention to edges and prep is unreal.",
-      rating: 5,
-    },
-    {
-      name: "Amelia Novak",
-      vehicle: "2024 Tesla Model Y",
-      service: "Ceramic IR Tint",
-      quote:
-        "Booked online in minutes, done in a day, warranty registered before I left. Legitimately the best service experience I've had.",
+        "Extremely happy with the finish and extra care taken with my new vehicle.",
       rating: 5,
     },
   ],

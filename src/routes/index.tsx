@@ -19,17 +19,17 @@ import { site } from "@/config/site";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: `${site.business.name} — Premium Window Tint & Auto Protection` },
+      { title: `${site.business.name} — Window Tint & Auto Detailing in Albuquerque, NM` },
       {
         name: "description",
         content:
-          "Premium ceramic window tint, PPF, and ceramic coating installed by certified specialists. Lifetime warranty. Get your free quote today.",
+          "Premium ceramic window tint, PPF, ceramic coating, and detailing in Albuquerque, NM. Certified installers, lifetime warranty. Get your free quote today.",
       },
-      { property: "og:title", content: `${site.business.name} — Premium Window Tint` },
+      { property: "og:title", content: `${site.business.name} — Window Tint & Detailing, Albuquerque` },
       {
         property: "og:description",
         content:
-          "Professional window tint, PPF, and ceramic coating with lifetime warranty.",
+          "Professional window tint, PPF, ceramic coating, and detailing in Albuquerque with lifetime warranty.",
       },
     ],
   }),

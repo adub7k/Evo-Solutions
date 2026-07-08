@@ -56,7 +56,7 @@ export function Testimonials() {
               <div>
                 <div className="font-medium">{t.name}</div>
                 <div className="text-sm text-muted-foreground">
-                  {t.vehicle} · {t.service}
+                  {[t.vehicle, t.service].filter(Boolean).join(" · ")}
                 </div>
               </div>
             </div>

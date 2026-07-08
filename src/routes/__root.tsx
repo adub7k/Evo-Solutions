@@ -21,7 +21,20 @@ const localBusinessLd = JSON.stringify({
   description: site.business.tagline,
   telephone: site.business.phone,
   email: site.business.email,
-  address: { "@type": "PostalAddress", streetAddress: site.business.address },
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: site.business.addressParts.street,
+    addressLocality: site.business.addressParts.city,
+    addressRegion: site.business.addressParts.state,
+    postalCode: site.business.addressParts.zip,
+    addressCountry: "US",
+  },
+  areaServed: "Albuquerque, NM",
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5.0",
+    reviewCount: "18",
+  },
   openingHoursSpecification: site.business.hours.map((h) => ({
     "@type": "OpeningHoursSpecification",
     dayOfWeek: h.day,
@@ -106,11 +119,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#1a1611" },
-      { title: "Evo Solutions — Premium Window Tint & Auto Protection" },
+      { title: "Evo Solutions — Window Tint & Auto Detailing in Albuquerque, NM" },
       {
         name: "description",
         content:
-          "Premium ceramic window tint, PPF, and ceramic coating. Lifetime warranty, certified installers, and obsessive attention to detail.",
+          "Premium ceramic window tint, PPF, ceramic coating, and detailing in Albuquerque, NM. 5.0★ Google rating, lifetime warranty, certified installers.",
       },
       { property: "og:type", content: "website" },
       {

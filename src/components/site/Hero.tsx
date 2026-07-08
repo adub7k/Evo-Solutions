@@ -2,7 +2,7 @@ import { ArrowRight, Phone, Star, ShieldCheck, Sparkles, Wrench } from "lucide-r
 import { site } from "@/config/site";
 
 const badges = [
-  { icon: Star, label: "4.9★ Reviews" },
+  { icon: Star, label: "5.0★ Google Reviews" },
   { icon: ShieldCheck, label: "Lifetime Warranty" },
   { icon: Sparkles, label: "Premium Films" },
   { icon: Wrench, label: "Certified Install" },
