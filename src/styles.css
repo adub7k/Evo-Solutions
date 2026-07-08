@@ -93,14 +93,15 @@
   html {
     scroll-behavior: smooth;
     color-scheme: dark;
+    /* Decorative blur orbs extend past the viewport on phones. Hiding
+       x-overflow on the ROOT keeps vertical scrolling intact — putting
+       clip/hidden on body instead locks the page from scrolling at all. */
+    overflow-x: hidden;
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    /* Decorative blur orbs extend past the viewport on phones; clip instead
-       of letting them create horizontal scroll. */
-    overflow-x: clip;
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;

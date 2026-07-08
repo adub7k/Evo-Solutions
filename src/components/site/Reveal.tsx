@@ -7,37 +7,66 @@ interface RevealProps {
   as?: "div" | "section" | "article" | "li" | "span";
 }
 
-/* Scroll-reveal that fails open: SSR ships the content fully visible, and we
- * only hide-then-animate on clients where JS actually ran. If the bundle
- * never loads (slow phone, flaky connection), the page still reads top to
- * bottom instead of stranding everything below the fold at opacity 0. */
+/* Scroll-reveal that can never strand content:
+ * - SSR/no-JS ships everything fully visible ("idle").
+ * - Content is hidden for the animation only once JS is running, and only
+ *   for elements below the fold at that moment.
+ * - Reveal triggers via IntersectionObserver AND a plain scroll/resize
+ *   fallback (covers throttled observers and phone rotation), so a visible
+ *   position always wins no matter which signal arrives. */
 export function Reveal({ children, delay = 0, className = "", as: Tag = "div" }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  // "idle" (SSR + no-JS: visible, unstyled) → "hidden" → "shown" (animated)
   const [phase, setPhase] = useState<"idle" | "hidden" | "shown">("idle");
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    // Already on screen at hydration (above the fold): leave it visible —
-    // hiding it now would flash content the visitor is already reading.
-    if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
+
+    const inView = () => el.getBoundingClientRect().top < window.innerHeight * 0.92;
+    // Above the fold at hydration: leave it visible, no animation.
+    if (inView()) return;
 
     setPhase("hidden");
+
+    let done = false;
+    let ticking = false;
+    const reveal = () => {
+      if (done) return;
+      done = true;
+      setPhase("shown");
+      cleanup();
+    };
+    const check = () => {
+      ticking = false;
+      if (inView()) reveal();
+    };
+    const onScrollOrResize = () => {
+      if (!ticking && !done) {
+        ticking = true;
+        // setTimeout, not requestAnimationFrame: rAF stalls entirely in
+        // throttled/background renderers, which is one of the failure modes
+        // this fallback exists to cover.
+        setTimeout(check, 80);
+      }
+    };
+
     const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setPhase("shown");
-            io.disconnect();
-          }
-        });
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -80px 0px" },
+      (entries) => entries.forEach((e) => e.isIntersecting && reveal()),
+      { threshold: 0, rootMargin: "0px 0px -60px 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("orientationchange", onScrollOrResize);
+
+    function cleanup() {
+      io.disconnect();
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("orientationchange", onScrollOrResize);
+    }
+    return cleanup;
   }, []);
 
   return (
