@@ -98,6 +98,9 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    /* Decorative blur orbs extend past the viewport on phones; clip instead
+       of letting them create horizontal scroll. */
+    overflow-x: clip;
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
