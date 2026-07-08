@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Upload, CalendarIcon, Clock, Loader2, Phone, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Reveal } from "./Reveal";
@@ -76,6 +76,9 @@ export function EstimateForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[] | null>(null); // null = loading/unknown
   const [slotsLive, setSlotsLive] = useState(false); // true when slots came from ShopFlow
+  // Phone we already sent an early-capture lead for, so step bouncing
+  // doesn't re-ping the owner.
+  const partialSentFor = useRef<string | null>(null);
 
   useEffect(() => {
     captureAttribution();
@@ -133,6 +136,23 @@ export function EstimateForm() {
 
   const handleNext = () => {
     if (!canNext() || !validateStep()) return;
+    // Speed-to-lead: the moment we have valid contact details, capture the
+    // lead — even if the visitor never finishes scheduling. Fire-and-forget;
+    // the final submit is authoritative and the server dedupes by phone.
+    if (step === 3 && partialSentFor.current !== data.phone) {
+      partialSentFor.current = data.phone;
+      submitLead({
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        service: data.service,
+        goal: data.goal,
+        timeline: data.timeline,
+        notes: data.notes,
+        vehicle: { year: data.year, make: data.make, model: data.model, color: data.color, type: data.vehicleType },
+        honeypot: data.honeypot,
+      }).catch(() => {});
+    }
     setStep((s) => s + 1);
   };
 
