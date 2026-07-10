@@ -1,6 +1,14 @@
 import { ArrowUpRight, Check } from "lucide-react";
-import { site } from "@/config/site";
+import { site, type ServiceKey } from "@/config/site";
 import { Reveal } from "./Reveal";
+
+// Map each catalog service to its dedicated page.
+const pageFor: Record<ServiceKey, string> = {
+  tint: "/window-tint",
+  ceramic: "/ceramic-coating",
+  ppf: "/paint-protection-film",
+  detail: "/detailing",
+};
 
 export function Services() {
   return (
@@ -31,6 +39,7 @@ export function Services() {
                   src={s.image}
                   alt={s.name}
                   loading="lazy"
+                  decoding="async"
                   width={1400}
                   height={875}
                   className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
@@ -45,9 +54,9 @@ export function Services() {
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="text-3xl">{s.name}</h3>
                   <a
-                    href="#quote"
+                    href={pageFor[s.key]}
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-full hairline text-foreground/80 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all"
-                    aria-label={`${s.cta} for ${s.name}`}
+                    aria-label={`Learn more about ${s.name}`}
                   >
                     <ArrowUpRight className="h-4 w-4" />
                   </a>
@@ -64,10 +73,10 @@ export function Services() {
                 </ul>
 
                 <a
-                  href="#quote"
+                  href={pageFor[s.key]}
                   className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-accent hover:brightness-110 transition-all"
                 >
-                  {s.cta}
+                  Learn more about {s.name}
                   <ArrowUpRight className="h-4 w-4" />
                 </a>
               </div>

@@ -1,10 +1,29 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { site } from "@/config/site";
 import { Reveal } from "./Reveal";
-import { X } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
+import { fetchShopGallery } from "@/lib/shopGallery";
+
+type Item = { src: string; alt: string; caption: string };
+
+// Stock placeholders until the shop's own uploads (ShopFlow → Settings →
+// Work Gallery) come back from the API — then real work replaces them.
+const fallback: Item[] = site.gallery;
 
 export function Gallery() {
+  const [items, setItems] = useState<Item[]>(fallback);
   const [active, setActive] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchShopGallery().then((shop) => {
+      if (shop && shop.length >= 3) {
+        setItems(
+          shop.slice(0, 6).map((p) => ({ src: p.url, alt: p.caption || "Our work", caption: p.caption }))
+        );
+      }
+    });
+  }, []);
 
   // Close the lightbox with Escape and keep the page from scrolling under it.
   useEffect(() => {
@@ -23,15 +42,21 @@ export function Gallery() {
   return (
     <section id="gallery" className="py-24 sm:py-32">
       <div className="container-x">
-        <Reveal className="max-w-2xl mb-16">
-          <div className="text-xs uppercase tracking-[0.24em] text-accent">Recent Work</div>
-          <h2 className="mt-4 text-4xl sm:text-5xl text-balance">
-            A gallery of vehicles that leave looking better than they came in.
-          </h2>
+        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
+          <div className="max-w-2xl">
+            <div className="text-xs uppercase tracking-[0.24em] text-accent">Recent Work</div>
+            <h2 className="mt-4 text-4xl sm:text-5xl text-balance">
+              A gallery of vehicles that leave looking better than they came in.
+            </h2>
+          </div>
+          <Link to="/gallery" className="inline-flex shrink-0 items-center gap-2 text-sm text-accent hover:underline">
+            View full gallery
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </Reveal>
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-          {site.gallery.map((g, i) => (
+          {items.map((g, i) => (
             <Reveal
               key={g.src}
               delay={i * 60}
@@ -42,13 +67,14 @@ export function Gallery() {
               <button
                 onClick={() => setActive(i)}
                 className="block w-full h-full text-left"
-                aria-label={`View ${g.caption}`}
+                aria-label={`View ${g.caption || "photo"}`}
               >
                 <div className="aspect-[4/3] w-full overflow-hidden">
                   <img
                     src={g.src}
                     alt={g.alt}
                     loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-110"
                   />
                 </div>
@@ -65,11 +91,11 @@ export function Gallery() {
         </div>
       </div>
 
-      {active !== null && (
+      {active !== null && items[active] && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={site.gallery[active].caption}
+          aria-label={items[active].caption || "Photo"}
           className="fixed inset-0 z-[100] grid place-items-center bg-background/98 p-4 sm:p-8 animate-fade-in"
           onClick={() => setActive(null)}
         >
@@ -82,8 +108,8 @@ export function Gallery() {
             <X className="h-5 w-5" />
           </button>
           <img
-            src={site.gallery[active].src}
-            alt={site.gallery[active].alt}
+            src={items[active].src}
+            alt={items[active].alt}
             className="max-h-[85vh] max-w-full rounded-2xl object-contain"
           />
         </div>

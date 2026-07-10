@@ -140,6 +140,9 @@ export const site = {
       caption: "Full Detail · Modern Sports Car",
     },
   ],
+  // YouTube videos for the gallery page — add IDs as Angelo films content.
+  // e.g. { youtubeId: "dQw4w9WgXcQ", title: "Full front PPF — time lapse" }
+  videos: [] as { youtubeId: string; title: string }[],
   whyChoose: [
     { title: "Premium Films Only", body: "We install top-tier ceramic and carbon films — never the bargain stuff." },
     { title: "Certified Installers", body: "Factory-trained installers who treat every vehicle like their own." },

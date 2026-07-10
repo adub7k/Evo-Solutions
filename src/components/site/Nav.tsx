@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { site } from "@/config/site";
 import { Menu, X, Phone } from "lucide-react";
 
+// Plain hrefs (not router Links) for hash targets so they work identically
+// from the home page and from subpages.
 const links = [
-  { href: "#services", label: "Services" },
-  { href: "#shades", label: "Shades" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#gallery", label: "Gallery" },
-  { href: "#reviews", label: "Reviews" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#services", label: "Services" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/blog", label: "Guides" },
+  { href: "/#reviews", label: "Reviews" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Nav() {
@@ -24,17 +27,17 @@ export function Nav() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ${
         scrolled ? "py-2" : "py-4"
       }`}
     >
       <div className="container-x">
         <div
-          className={`flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-all duration-500 ${
+          className={`flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-colors duration-300 ${
             scrolled ? "glass shadow-elevated" : ""
           }`}
         >
-          <a href="#top" className="flex items-center gap-2 min-w-0">
+          <Link to="/" className="flex items-center gap-2 min-w-0">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg ember-gradient">
               <span className="font-display text-lg text-primary-foreground">
                 {site.business.name.charAt(0)}
@@ -43,7 +46,7 @@ export function Nav() {
             <span className="font-display text-xl sm:text-2xl truncate">
               {site.business.name}
             </span>
-          </a>
+          </Link>
 
           <nav className="hidden lg:flex items-center gap-8">
             {links.map((l) => (
@@ -66,7 +69,7 @@ export function Nav() {
               {site.business.phone}
             </a>
             <a
-              href="#quote"
+              href="/#quote"
               className="inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:brightness-110 transition-all shadow-glow"
             >
               Get Free Quote
@@ -104,7 +107,7 @@ export function Nav() {
                 {site.business.phone}
               </a>
               <a
-                href="#quote"
+                href="/#quote"
                 onClick={() => setOpen(false)}
                 className="mt-2 inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-medium text-accent-foreground"
               >

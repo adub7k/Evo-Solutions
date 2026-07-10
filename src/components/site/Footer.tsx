@@ -1,11 +1,12 @@
 import { Instagram, Facebook, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import { site } from "@/config/site";
+import { services } from "@/content/services";
 
 export function Footer() {
   return (
     <footer id="contact" className="border-t border-border/60 bg-surface/30 pt-20 pb-10">
       <div className="container-x">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2 max-w-md">
             <div className="flex items-center gap-2">
               <div className="grid h-9 w-9 place-items-center rounded-lg ember-gradient">
@@ -43,6 +44,41 @@ export function Footer() {
                 <Youtube className="h-4 w-4" />
               </a>
             </div>
+          </div>
+
+          <div>
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
+              Services
+            </div>
+            <ul className="space-y-3 text-sm">
+              {services.map((s) => (
+                <li key={s.slug}>
+                  <a
+                    href={`/${s.slug}`}
+                    className="text-foreground/85 hover:text-foreground transition"
+                  >
+                    {s.serviceName}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a href="/tint-laws-new-mexico" className="text-foreground/85 hover:text-foreground transition">
+                  NM Tint Laws
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
+              Explore
+            </div>
+            <ul className="space-y-3 text-sm">
+              <li><a href="/gallery" className="text-foreground/85 hover:text-foreground transition">Gallery</a></li>
+              <li><a href="/blog" className="text-foreground/85 hover:text-foreground transition">Guides</a></li>
+              <li><a href="/about" className="text-foreground/85 hover:text-foreground transition">About</a></li>
+              <li><a href="/#quote" className="text-foreground/85 hover:text-foreground transition">Get a Quote</a></li>
+            </ul>
           </div>
 
           <div>

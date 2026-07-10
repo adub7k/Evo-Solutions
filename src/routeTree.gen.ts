@@ -9,38 +9,208 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WindowTintRouteImport } from './routes/window-tint'
+import { Route as TintLawsNewMexicoRouteImport } from './routes/tint-laws-new-mexico'
+import { Route as PaintProtectionFilmRouteImport } from './routes/paint-protection-film'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as DetailingRouteImport } from './routes/detailing'
+import { Route as CeramicCoatingRouteImport } from './routes/ceramic-coating'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 
+const WindowTintRoute = WindowTintRouteImport.update({
+  id: '/window-tint',
+  path: '/window-tint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TintLawsNewMexicoRoute = TintLawsNewMexicoRouteImport.update({
+  id: '/tint-laws-new-mexico',
+  path: '/tint-laws-new-mexico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaintProtectionFilmRoute = PaintProtectionFilmRouteImport.update({
+  id: '/paint-protection-film',
+  path: '/paint-protection-film',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DetailingRoute = DetailingRouteImport.update({
+  id: '/detailing',
+  path: '/detailing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CeramicCoatingRoute = CeramicCoatingRouteImport.update({
+  id: '/ceramic-coating',
+  path: '/ceramic-coating',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/ceramic-coating': typeof CeramicCoatingRoute
+  '/detailing': typeof DetailingRoute
+  '/gallery': typeof GalleryRoute
+  '/paint-protection-film': typeof PaintProtectionFilmRoute
+  '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
+  '/window-tint': typeof WindowTintRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/ceramic-coating': typeof CeramicCoatingRoute
+  '/detailing': typeof DetailingRoute
+  '/gallery': typeof GalleryRoute
+  '/paint-protection-film': typeof PaintProtectionFilmRoute
+  '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
+  '/window-tint': typeof WindowTintRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog': typeof BlogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/ceramic-coating': typeof CeramicCoatingRoute
+  '/detailing': typeof DetailingRoute
+  '/gallery': typeof GalleryRoute
+  '/paint-protection-film': typeof PaintProtectionFilmRoute
+  '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
+  '/window-tint': typeof WindowTintRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/ceramic-coating'
+    | '/detailing'
+    | '/gallery'
+    | '/paint-protection-film'
+    | '/tint-laws-new-mexico'
+    | '/window-tint'
+    | '/blog/$slug'
+    | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/ceramic-coating'
+    | '/detailing'
+    | '/gallery'
+    | '/paint-protection-film'
+    | '/tint-laws-new-mexico'
+    | '/window-tint'
+    | '/blog/$slug'
+    | '/blog'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/ceramic-coating'
+    | '/detailing'
+    | '/gallery'
+    | '/paint-protection-film'
+    | '/tint-laws-new-mexico'
+    | '/window-tint'
+    | '/blog/$slug'
+    | '/blog/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  CeramicCoatingRoute: typeof CeramicCoatingRoute
+  DetailingRoute: typeof DetailingRoute
+  GalleryRoute: typeof GalleryRoute
+  PaintProtectionFilmRoute: typeof PaintProtectionFilmRoute
+  TintLawsNewMexicoRoute: typeof TintLawsNewMexicoRoute
+  WindowTintRoute: typeof WindowTintRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/window-tint': {
+      id: '/window-tint'
+      path: '/window-tint'
+      fullPath: '/window-tint'
+      preLoaderRoute: typeof WindowTintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tint-laws-new-mexico': {
+      id: '/tint-laws-new-mexico'
+      path: '/tint-laws-new-mexico'
+      fullPath: '/tint-laws-new-mexico'
+      preLoaderRoute: typeof TintLawsNewMexicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paint-protection-film': {
+      id: '/paint-protection-film'
+      path: '/paint-protection-film'
+      fullPath: '/paint-protection-film'
+      preLoaderRoute: typeof PaintProtectionFilmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/detailing': {
+      id: '/detailing'
+      path: '/detailing'
+      fullPath: '/detailing'
+      preLoaderRoute: typeof DetailingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ceramic-coating': {
+      id: '/ceramic-coating'
+      path: '/ceramic-coating'
+      fullPath: '/ceramic-coating'
+      preLoaderRoute: typeof CeramicCoatingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +218,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  CeramicCoatingRoute: CeramicCoatingRoute,
+  DetailingRoute: DetailingRoute,
+  GalleryRoute: GalleryRoute,
+  PaintProtectionFilmRoute: PaintProtectionFilmRoute,
+  TintLawsNewMexicoRoute: TintLawsNewMexicoRoute,
+  WindowTintRoute: WindowTintRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

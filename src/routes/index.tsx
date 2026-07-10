@@ -43,17 +43,18 @@ function Index() {
       <main>
         <Hero />
         <SocialProof />
-        <WhyTint />
-        <Services />
-        <ShadePicker />
-        <Gallery />
-        <Packages />
-        <WhyChooseUs />
-        <Process />
-        <Testimonials />
-        <EstimateForm />
-        <FAQ />
-        <FinalCTA />
+        {/* cv-auto: browser skips rendering these until they near the viewport */}
+        <div className="cv-auto"><WhyTint /></div>
+        <div className="cv-auto"><Services /></div>
+        <div className="cv-auto"><ShadePicker /></div>
+        <div className="cv-auto"><Gallery /></div>
+        <div className="cv-auto"><Packages /></div>
+        <div className="cv-auto"><WhyChooseUs /></div>
+        <div className="cv-auto"><Process /></div>
+        <div className="cv-auto"><Testimonials /></div>
+        <div className="cv-auto"><EstimateForm /></div>
+        <div className="cv-auto"><FAQ /></div>
+        <div className="cv-auto"><FinalCTA /></div>
       </main>
       <Footer />
     </div>

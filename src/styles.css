@@ -135,9 +135,19 @@
 }
 
 @utility glass {
-  background: color-mix(in oklab, var(--surface) 60%, transparent);
-  backdrop-filter: blur(20px) saturate(150%);
+  background: color-mix(in oklab, var(--surface) 78%, transparent);
+  /* 8px, not 20px: the nav's backdrop blur repaints on every scrolled frame,
+     and heavy radii are the main scroll-jank cost on phones. */
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border);
+}
+
+/* Skip layout/paint for sections far offscreen — the page is ~17k px tall
+   and rendering all of it during scroll is wasted work. The intrinsic size
+   keeps the scrollbar stable before a section first renders. */
+@utility cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 
 @utility hairline {

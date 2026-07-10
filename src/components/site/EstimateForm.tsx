@@ -67,9 +67,12 @@ const steps = ["Service", "Vehicle", "Goals", "Details", "Schedule"];
 
 type Errors = Partial<Record<"year" | "name" | "phone" | "email", string>>;
 
-export function EstimateForm() {
+export function EstimateForm({ defaultService }: { defaultService?: string } = {}) {
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<Data>(initial);
+  const [data, setData] = useState<Data>(() => ({
+    ...initial,
+    service: defaultService && services.includes(defaultService) ? defaultService : "",
+  }));
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
