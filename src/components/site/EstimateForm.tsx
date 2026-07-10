@@ -68,11 +68,12 @@ const steps = ["Service", "Vehicle", "Goals", "Details", "Schedule"];
 type Errors = Partial<Record<"year" | "name" | "phone" | "email", string>>;
 
 export function EstimateForm({ defaultService }: { defaultService?: string } = {}) {
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<Data>(() => ({
-    ...initial,
-    service: defaultService && services.includes(defaultService) ? defaultService : "",
-  }));
+  // On a service page the service is already known, so start the customer on
+  // the Vehicle step with that service locked in — one less tap, and the lead
+  // still carries the correct service through to the CRM.
+  const presetService = defaultService && services.includes(defaultService) ? defaultService : "";
+  const [step, setStep] = useState(presetService ? 1 : 0);
+  const [data, setData] = useState<Data>(() => ({ ...initial, service: presetService }));
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
