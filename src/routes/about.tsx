@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Clock, Star } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Reveal } from "@/components/site/Reveal";
 import { site } from "@/config/site";
+import { fetchSiteTeam, type TeamMember } from "@/lib/shopGallery";
 
 const TITLE = "About Evo Solutions — Formerly MAD Detailing NM | Albuquerque";
 const DESC =
@@ -10,6 +12,63 @@ const DESC =
 
 const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=" +
   encodeURIComponent("MAD Detailing NM, 3500 Vista Alameda NE A, Albuquerque, NM 87113");
+
+// Owner-curated staff roster from ShopFlow (Settings → Meet the Team). Renders
+// nothing until real members exist — we never show placeholder/invented staff.
+function MeetTheTeam() {
+  const [team, setTeam] = useState<TeamMember[]>([]);
+
+  useEffect(() => {
+    fetchSiteTeam().then(setTeam);
+  }, []);
+
+  if (team.length === 0) return null;
+
+  return (
+    <section className="pb-20">
+      <div className="container-x max-w-5xl">
+        <Reveal className="max-w-2xl mb-12">
+          <div className="text-xs uppercase tracking-[0.24em] text-accent">Meet the Team</div>
+          <h2 className="mt-4 text-3xl sm:text-4xl text-balance">
+            The people behind the work.
+          </h2>
+        </Reveal>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {team.map((m, i) => (
+            <Reveal
+              key={m.id}
+              delay={i * 70}
+              className="rounded-3xl hairline bg-card/60 p-6 text-center sm:text-left"
+            >
+              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-4">
+                {m.photo ? (
+                  <img
+                    src={m.photo}
+                    alt={m.name}
+                    loading="lazy"
+                    className="h-20 w-20 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-accent text-2xl font-medium text-accent-foreground">
+                    {m.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="text-lg font-medium text-foreground">{m.name}</div>
+                  {m.title && <div className="text-sm text-accent">{m.title}</div>}
+                </div>
+              </div>
+              {m.bio && (
+                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
+              )}
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -55,6 +114,8 @@ function RouteComponent() {
           </div>
         </div>
       </section>
+
+      <MeetTheTeam />
 
       <section className="pb-20">
         <div className="container-x grid gap-6 max-w-3xl sm:grid-cols-3">

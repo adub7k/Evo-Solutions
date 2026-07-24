@@ -5,6 +5,7 @@
 import { publicApi, shopflow } from "@/config/shopflow";
 
 export type ShopPhoto = { id: string; url: string; caption: string };
+export type TeamMember = { id: string; name: string; title: string; bio: string; photo: string };
 
 // Uploads are stored as /uploads/:shopId/:file on the platform host — turn a
 // relative path into an absolute URL; leave already-absolute URLs untouched.
@@ -53,4 +54,21 @@ export async function fetchSiteImages(): Promise<Record<string, string>> {
     if (typeof v === "string" && v) out[k] = resolveUrl(v);
   }
   return out;
+}
+
+// Owner-curated "Meet the Team" roster (ShopFlow → Settings → Meet the Team).
+// Empty array when unset or unreachable, so the About page simply omits the
+// section rather than showing invented staff.
+export async function fetchSiteTeam(): Promise<TeamMember[]> {
+  const info = await getInfo();
+  const raw = info && Array.isArray(info.siteTeam) ? info.siteTeam : [];
+  return raw
+    .filter((m: { name?: string }) => m && typeof m.name === "string" && m.name.trim())
+    .map((m: { id?: string; name: string; title?: string; bio?: string; photo?: string }) => ({
+      id: String(m.id ?? m.name),
+      name: String(m.name),
+      title: String(m.title ?? ""),
+      bio: String(m.bio ?? ""),
+      photo: m.photo ? resolveUrl(String(m.photo)) : "",
+    }));
 }
