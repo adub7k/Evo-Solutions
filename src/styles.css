@@ -39,51 +39,53 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
-  --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--accent) 45%, transparent);
-  --shadow-elevated: 0 30px 60px -30px oklch(0 0 0 / 0.7), 0 12px 30px -20px oklch(0 0 0 / 0.5);
+  --shadow-glow: 0 8px 24px -8px color-mix(in oklab, var(--accent) 38%, transparent);
+  --shadow-elevated: 0 18px 40px -24px oklch(0.25 0.04 258 / 0.26), 0 6px 16px -12px oklch(0.25 0.04 258 / 0.14);
 }
 
 :root {
   --radius: 0.75rem;
 
-  /* Luxury automotive palette — near-black, warm ember accent */
-  --background: oklch(0.14 0.006 60);
-  --foreground: oklch(0.97 0.008 80);
+  /* Clean, trustworthy palette — white surfaces, professional blue accent */
+  --background: oklch(0.995 0.002 255);
+  --foreground: oklch(0.22 0.02 258);
 
-  --surface: oklch(0.17 0.008 60);
-  --surface-elevated: oklch(0.21 0.010 60);
+  --surface: oklch(0.975 0.005 255);
+  --surface-elevated: oklch(0.955 0.007 255);
 
-  --card: oklch(0.18 0.008 60);
-  --card-foreground: oklch(0.97 0.008 80);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 258);
 
-  --popover: oklch(0.19 0.008 60);
-  --popover-foreground: oklch(0.97 0.008 80);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 258);
 
-  /* Warm ember / copper accent */
-  --primary: oklch(0.75 0.14 55);
-  --primary-foreground: oklch(0.14 0.006 60);
+  /* Professional blue */
+  --primary: oklch(0.54 0.16 256);
+  --primary-foreground: oklch(0.99 0.005 255);
 
-  --accent: oklch(0.75 0.14 55);
-  --accent-foreground: oklch(0.14 0.006 60);
+  --accent: oklch(0.54 0.16 256);
+  --accent-foreground: oklch(0.99 0.005 255);
 
-  --secondary: oklch(0.24 0.010 60);
-  --secondary-foreground: oklch(0.97 0.008 80);
+  --secondary: oklch(0.95 0.012 255);
+  --secondary-foreground: oklch(0.30 0.03 258);
 
-  --muted: oklch(0.22 0.008 60);
-  --muted-foreground: oklch(0.68 0.015 70);
+  --muted: oklch(0.965 0.008 255);
+  --muted-foreground: oklch(0.44 0.025 258);
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 80);
+  --destructive: oklch(0.58 0.20 25);
+  --destructive-foreground: oklch(0.99 0.005 255);
 
-  --border: oklch(1 0 0 / 0.08);
-  --border-strong: oklch(1 0 0 / 0.16);
-  --input: oklch(1 0 0 / 0.12);
-  --ring: oklch(0.75 0.14 55);
+  --border: oklch(0.25 0.03 258 / 0.12);
+  --border-strong: oklch(0.25 0.03 258 / 0.20);
+  --input: oklch(0.25 0.03 258 / 0.16);
+  --ring: oklch(0.54 0.16 256);
 }
 
+/* Components hard-code a `.dark` wrapper from the old theme; mirror the light
+   palette here so the site renders identically whether the class is present. */
 .dark {
-  --background: oklch(0.14 0.006 60);
-  --foreground: oklch(0.97 0.008 80);
+  --background: oklch(0.995 0.002 255);
+  --foreground: oklch(0.22 0.02 258);
 }
 
 @layer base {
@@ -92,7 +94,7 @@
   }
   html {
     scroll-behavior: smooth;
-    color-scheme: dark;
+    color-scheme: light;
     /* Decorative blur orbs extend past the viewport on phones. Hiding
        x-overflow on the ROOT keeps vertical scrolling intact — putting
        clip/hidden on body instead locks the page from scrolling at all. */
@@ -157,38 +159,22 @@
 @utility ember-gradient {
   background: linear-gradient(
     135deg,
-    oklch(0.78 0.16 60) 0%,
-    oklch(0.68 0.16 40) 100%
+    oklch(0.60 0.16 256) 0%,
+    oklch(0.47 0.17 262) 100%
   );
 }
 
+/* Kept the name so components don't need touching, but a solid brand blue
+   reads as a real business — gradient text is a giveaway tell. */
 @utility ember-text {
-  background: linear-gradient(
-    135deg,
-    oklch(0.85 0.14 70) 0%,
-    oklch(0.7 0.16 45) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--primary);
 }
 
-/* Film-grain overlay — desktop only. On iOS Safari the combination of
-   SVG feTurbulence + mix-blend-mode across several full-height sections
-   can exhaust GPU tile memory and paint the whole page black. */
+/* Film-grain removed — on a clean white business site the grain overlay reads
+   as a stylized "designed" texture. Utility retained (as a positioning context
+   for absolutely-placed children) so components referencing it don't break. */
 @utility noise {
   position: relative;
-  @media (min-width: 1024px) {
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.04;
-      mix-blend-mode: overlay;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
-    }
-  }
 }
 
 /* Ambient glow without filter: blur() at 120px+ radii forces enormous
@@ -198,7 +184,7 @@
   border-radius: 9999px;
   background: radial-gradient(
     closest-side,
-    color-mix(in oklab, var(--accent) 16%, transparent),
+    color-mix(in oklab, var(--accent) 7%, transparent),
     transparent 72%
   );
 }
@@ -246,6 +232,6 @@
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--background); }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--accent) 30%, var(--surface-elevated));
+  background: color-mix(in oklab, var(--accent) 55%, var(--surface-elevated));
   border-radius: 10px;
 }

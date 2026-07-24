@@ -279,7 +279,7 @@ export const site = {
     },
     {
       q: "How much does professional tint cost?",
-      a: "Full vehicle ceramic tint starts around $399 and goes up based on film tier and vehicle size. Get an instant estimate using our quote form — no surprises.",
+      a: "It depends on your vehicle and the film tier you choose. We quote a flat, all-in price up front from the details you send us — no hidden fees and no surprises at pickup. Send your vehicle info through the quote form and we'll get you an exact number.",
     },
     {
       q: "How soon can I book?",

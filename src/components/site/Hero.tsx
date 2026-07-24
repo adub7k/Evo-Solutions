@@ -16,13 +16,13 @@ export function Hero() {
         <img
           src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2400&q=85"
           alt=""
-          className="h-full w-full object-cover object-center opacity-40"
+          className="h-full w-full object-cover object-center opacity-25"
           width={2400}
           height={1600}
           fetchPriority="high"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/85 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/20" />
       </div>
 
       {/* Ambient glow */}

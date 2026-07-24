@@ -38,7 +38,7 @@ function RouteComponent() {
 
   useEffect(() => {
     fetchShopGallery().then((shop) => {
-      if (shop && shop.length >= 3) {
+      if (shop && shop.length >= 1) {
         setPhotos(shop);
         setLive(true);
       }

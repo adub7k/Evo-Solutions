@@ -6,7 +6,6 @@ import { WhyTint } from "@/components/site/WhyTint";
 import { Services } from "@/components/site/Services";
 import { ShadePicker } from "@/components/site/ShadePicker";
 import { Gallery } from "@/components/site/Gallery";
-import { Packages } from "@/components/site/Packages";
 import { WhyChooseUs } from "@/components/site/WhyChooseUs";
 import { Process } from "@/components/site/Process";
 import { Testimonials } from "@/components/site/Testimonials";
@@ -48,7 +47,6 @@ function Index() {
         <div className="cv-auto"><Services /></div>
         <div className="cv-auto"><ShadePicker /></div>
         <div className="cv-auto"><Gallery /></div>
-        <div className="cv-auto"><Packages /></div>
         <div className="cv-auto"><WhyChooseUs /></div>
         <div className="cv-auto"><Process /></div>
         <div className="cv-auto"><Testimonials /></div>

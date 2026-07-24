@@ -17,7 +17,7 @@ export function Gallery() {
 
   useEffect(() => {
     fetchShopGallery().then((shop) => {
-      if (shop && shop.length >= 3) {
+      if (shop && shop.length >= 1) {
         setItems(
           shop.slice(0, 6).map((p) => ({ src: p.url, alt: p.caption || "Our work", caption: p.caption }))
         );

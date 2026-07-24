@@ -62,7 +62,7 @@ export const services: ServiceContent[] = [
         a: "We recommend 3–4 days in summer and up to a week in winter while the film fully cures. You'll see some hazing or small water pockets during that time — completely normal, they evaporate as it dries.",
       },
     ],
-    priceNote: "Full-vehicle carbon tint starts at $249; ceramic from $399. Exact quote depends on vehicle and film — no surprises at pickup.",
+    priceNote: "Every quote is a flat, all-in price based on your vehicle and the film tier you choose — confirmed before we start, with no surprises at pickup.",
   },
   {
     slug: "ceramic-coating",
