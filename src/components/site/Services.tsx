@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import { site, type ServiceKey } from "@/config/site";
 import { Reveal } from "./Reveal";
+import { fetchSiteImages } from "@/lib/shopGallery";
 
 // Map each catalog service to its dedicated page.
 const pageFor: Record<ServiceKey, string> = {
@@ -11,6 +13,13 @@ const pageFor: Record<ServiceKey, string> = {
 };
 
 export function Services() {
+  // Owner overrides (ShopFlow → Settings → Website Photos), keyed service_<key>.
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetchSiteImages().then(setOverrides);
+  }, []);
+
   return (
     <section id="services" className="py-24 sm:py-32 bg-surface/30">
       <div className="container-x">
@@ -36,7 +45,7 @@ export function Services() {
             >
               <div className="relative aspect-[16/10] overflow-hidden">
                 <img
-                  src={s.image}
+                  src={overrides[`service_${s.key}`] || s.image}
                   alt={s.name}
                   loading="lazy"
                   decoding="async"
