@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { site } from "../config/site";
+import { publicApi, shopflow } from "../config/shopflow";
 
 // Local-SEO structured data: an auto business lives or dies on "tint near me".
 const localBusinessLd = JSON.stringify({
@@ -113,8 +114,38 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+// Link-preview image (og:image) shown when the site is shared in iMessage,
+// Messenger, etc. Falls back to a stock photo before any real work exists.
+const OG_FALLBACK =
+  "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80";
+
+// Resolve the share image from the shop's Work Gallery — the newest photo Angelo
+// uploads becomes the preview. Crawlers read og:image from the SSR HTML and do
+// NOT run JS, so this must be picked server-side (not in a component effect).
+// Never throws: any failure/timeout falls back to the stock photo so a slow or
+// down API can never break page rendering.
+async function resolveOgImage(): Promise<string> {
+  if (!import.meta.env.SSR) return OG_FALLBACK; // only the server HTML is crawled
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(publicApi("/info"), { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return OG_FALLBACK;
+    const info = await res.json();
+    const first = Array.isArray(info.gallery)
+      ? info.gallery.find((g: { url?: string }) => g && typeof g.url === "string" && g.url)
+      : null;
+    if (!first) return OG_FALLBACK;
+    return first.url.startsWith("http") ? first.url : shopflow.apiBase + first.url;
+  } catch {
+    return OG_FALLBACK;
+  }
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: async () => ({ ogImage: await resolveOgImage() }),
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -126,12 +157,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Premium ceramic window tint, PPF, ceramic coating, and detailing in Albuquerque, NM. 5.0★ Google rating, lifetime warranty, certified installers.",
       },
       { property: "og:type", content: "website" },
-      {
-        property: "og:image",
-        content:
-          "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
-      },
+      { property: "og:image", content: loaderData?.ogImage || OG_FALLBACK },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: loaderData?.ogImage || OG_FALLBACK },
     ],
     scripts: [
       { type: "application/ld+json", children: localBusinessLd },
