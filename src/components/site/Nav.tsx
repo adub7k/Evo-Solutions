@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { site } from "@/config/site";
 import { services } from "@/content/services";
+import { fetchSiteImages } from "@/lib/shopGallery";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
 
 // Real pages lead the nav so the site navigates like the multi-page site it
@@ -19,12 +20,17 @@ export function Nav() {
   const [open, setOpen] = useState(false); // mobile menu
   const [servicesOpen, setServicesOpen] = useState(false); // desktop dropdown
   const [mobileServices, setMobileServices] = useState(false);
+  const [logo, setLogo] = useState<string | null>(null); // owner's uploaded logo
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    fetchSiteImages().then((imgs) => imgs.logo && setLogo(imgs.logo));
   }, []);
 
   return (
@@ -39,13 +45,23 @@ export function Nav() {
             scrolled ? "glass shadow-elevated" : ""
           }`}
         >
-          <Link to="/" className="flex items-center gap-2 min-w-0">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg ember-gradient">
-              <span className="font-display text-lg text-primary-foreground">
-                {site.business.name.charAt(0)}
-              </span>
-            </div>
-            <span className="font-display text-xl sm:text-2xl truncate">{site.business.name}</span>
+          <Link to="/" className="flex items-center gap-2 min-w-0" aria-label={site.business.name}>
+            {logo ? (
+              <img
+                src={logo}
+                alt={site.business.name}
+                className="h-10 sm:h-11 w-auto max-w-[220px] object-contain"
+              />
+            ) : (
+              <>
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg ember-gradient">
+                  <span className="font-display text-lg text-primary-foreground">
+                    {site.business.name.charAt(0)}
+                  </span>
+                </div>
+                <span className="font-display text-xl sm:text-2xl truncate">{site.business.name}</span>
+              </>
+            )}
           </Link>
 
           <nav className="hidden lg:flex items-center gap-7">

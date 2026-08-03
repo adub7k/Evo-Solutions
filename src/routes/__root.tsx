@@ -119,32 +119,40 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 const OG_FALLBACK =
   "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80";
 
-// Resolve the share image from the shop's Work Gallery — the newest photo Angelo
-// uploads becomes the preview. Crawlers read og:image from the SSR HTML and do
-// NOT run JS, so this must be picked server-side (not in a component effect).
-// Never throws: any failure/timeout falls back to the stock photo so a slow or
-// down API can never break page rendering.
-async function resolveOgImage(): Promise<string> {
-  if (!import.meta.env.SSR) return OG_FALLBACK; // only the server HTML is crawled
+// Resolve share image + favicon from the shop's ShopFlow content in ONE fetch:
+//   • og:image — the newest Work Gallery photo becomes the social preview
+//   • logo     — the owner's uploaded logo (Settings → Website Photos → Logo)
+//     drives the browser-tab icon
+// Crawlers and the browser tab both read the SSR <head> and do NOT run JS, so
+// these must be picked server-side (not in a component effect). Never throws:
+// any failure/timeout falls back to the stock photo / static favicon so a slow
+// or down API can never break page rendering.
+async function resolveSiteMeta(): Promise<{ ogImage: string; logo: string | null }> {
+  if (!import.meta.env.SSR) return { ogImage: OG_FALLBACK, logo: null }; // only server HTML is crawled
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2500);
     const res = await fetch(publicApi("/info"), { signal: controller.signal });
     clearTimeout(timer);
-    if (!res.ok) return OG_FALLBACK;
+    if (!res.ok) return { ogImage: OG_FALLBACK, logo: null };
     const info = await res.json();
+    const abs = (u: string) => (u.startsWith("http") ? u : shopflow.apiBase + u);
     const first = Array.isArray(info.gallery)
       ? info.gallery.find((g: { url?: string }) => g && typeof g.url === "string" && g.url)
       : null;
-    if (!first) return OG_FALLBACK;
-    return first.url.startsWith("http") ? first.url : shopflow.apiBase + first.url;
+    const logoRaw =
+      info.siteImages && typeof info.siteImages.logo === "string" ? info.siteImages.logo : "";
+    return {
+      ogImage: first ? abs(first.url) : OG_FALLBACK,
+      logo: logoRaw ? abs(logoRaw) : null,
+    };
   } catch {
-    return OG_FALLBACK;
+    return { ogImage: OG_FALLBACK, logo: null };
   }
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async () => ({ ogImage: await resolveOgImage() }),
+  loader: async () => await resolveSiteMeta(),
   head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
@@ -167,9 +175,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      // Owner's uploaded logo becomes the tab icon; static files are the fallback
+      // when no logo is set (or the API was unreachable at SSR time).
+      ...(loaderData?.logo
+        ? [
+            { rel: "icon", href: loaderData.logo },
+            { rel: "apple-touch-icon", href: loaderData.logo },
+          ]
+        : [
+            { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+            { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+            { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+          ]),
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
