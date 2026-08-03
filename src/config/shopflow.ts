@@ -7,7 +7,7 @@ export const shopflow = {
   apiBase: (import.meta.env.VITE_SHOPFLOW_API_URL as string | undefined) ??
     "https://shopflowio.up.railway.app",
   shopSlug: (import.meta.env.VITE_SHOPFLOW_SHOP_SLUG as string | undefined) ??
-    "evo-solutions",
+    "mad-detailing", // Angelo's ShopFlow tenant (Evo Solutions is the brand, mad-detailing is the slug)
 };
 
 export const publicApi = (path: string) =>
