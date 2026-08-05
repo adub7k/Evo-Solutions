@@ -29,6 +29,12 @@ export type ServiceContent = {
   variant?: "auto" | "commercial" | "fleet";
   /** Field config for the business lead form (variant !== "auto"). */
   lead?: CommercialLead;
+  /**
+   * Owner-photo slot (ShopFlow → Settings → Website Photos) that overrides the
+   * page hero image. Same slot name the homepage service card uses, so one
+   * upload swaps both. Falls back to `image` when unset or the API is down.
+   */
+  imageSlot?: string;
 };
 
 export const services: ServiceContent[] = [
@@ -266,6 +272,7 @@ export const services: ServiceContent[] = [
     priceNote:
       "Commercial and home jobs are quoted by square footage and film type after a quick on-site assessment — no vehicle-style flat rate. Send the details below and we'll set up a free walkthrough.",
     variant: "commercial",
+    imageSlot: "service_commercial",
     lead: {
       blurb: "Tell us about the space and we'll set up a free on-site assessment.",
       selectLabel: "What can we tint?",

@@ -1,20 +1,33 @@
+import { useEffect, useState } from "react";
 import { ArrowRight, Check, Phone } from "lucide-react";
 import type { ServiceContent } from "@/content/services";
 import { site } from "@/config/site";
+import { fetchSiteImages } from "@/lib/shopGallery";
 import { Reveal } from "./Reveal";
 import { EstimateForm } from "./EstimateForm";
 import { CommercialQuoteForm } from "./CommercialQuoteForm";
 
-// Shared template for the four service pages: hero → selling points →
+// Shared template for the service pages: hero → selling points →
 // what's included → mini-FAQ → embedded quote form preselected to the service.
 export function ServicePage({ service }: { service: ServiceContent }) {
+  // Hero starts on the built-in stock image (SSR + SEO), then swaps to the
+  // owner's uploaded photo if they've set one for this service's slot.
+  const [heroImage, setHeroImage] = useState(service.image);
+  useEffect(() => {
+    const slot = service.imageSlot;
+    if (!slot) return;
+    fetchSiteImages().then((imgs) => {
+      if (imgs[slot]) setHeroImage(imgs[slot]);
+    });
+  }, [service.imageSlot]);
+
   return (
     <>
       {/* Hero */}
       <section className="relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-24">
         <div className="absolute inset-0 -z-10">
           <img
-            src={service.image}
+            src={heroImage}
             alt=""
             className="h-full w-full object-cover object-center opacity-30"
             fetchPriority="high"
