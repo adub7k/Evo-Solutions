@@ -3,6 +3,7 @@ import type { ServiceContent } from "@/content/services";
 import { site } from "@/config/site";
 import { Reveal } from "./Reveal";
 import { EstimateForm } from "./EstimateForm";
+import { CommercialQuoteForm } from "./CommercialQuoteForm";
 
 // Shared template for the four service pages: hero → selling points →
 // what's included → mini-FAQ → embedded quote form preselected to the service.
@@ -102,9 +103,14 @@ export function ServicePage({ service }: { service: ServiceContent }) {
         </div>
       </section>
 
-      {/* Quote form, preselected to this service */}
+      {/* Quote form. Business/commercial pages use the single-screen business
+          lead form; automotive pages use the vehicle-based estimate flow. */}
       <div className="cv-auto">
-        <EstimateForm defaultService={service.serviceName} />
+        {service.variant === "commercial" || service.variant === "fleet" ? (
+          <CommercialQuoteForm service={service} />
+        ) : (
+          <EstimateForm defaultService={service.serviceName} />
+        )}
       </div>
     </>
   );

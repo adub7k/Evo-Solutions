@@ -13,7 +13,9 @@ import { Route as WindowTintRouteImport } from './routes/window-tint'
 import { Route as TintLawsNewMexicoRouteImport } from './routes/tint-laws-new-mexico'
 import { Route as PaintProtectionFilmRouteImport } from './routes/paint-protection-film'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as FleetTintRouteImport } from './routes/fleet-tint'
 import { Route as DetailingRouteImport } from './routes/detailing'
+import { Route as CommercialTintRouteImport } from './routes/commercial-tint'
 import { Route as CeramicCoatingRouteImport } from './routes/ceramic-coating'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -40,9 +42,19 @@ const GalleryRoute = GalleryRouteImport.update({
   path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FleetTintRoute = FleetTintRouteImport.update({
+  id: '/fleet-tint',
+  path: '/fleet-tint',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DetailingRoute = DetailingRouteImport.update({
   id: '/detailing',
   path: '/detailing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommercialTintRoute = CommercialTintRouteImport.update({
+  id: '/commercial-tint',
+  path: '/commercial-tint',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CeramicCoatingRoute = CeramicCoatingRouteImport.update({
@@ -75,7 +87,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/ceramic-coating': typeof CeramicCoatingRoute
+  '/commercial-tint': typeof CommercialTintRoute
   '/detailing': typeof DetailingRoute
+  '/fleet-tint': typeof FleetTintRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
@@ -87,7 +101,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/ceramic-coating': typeof CeramicCoatingRoute
+  '/commercial-tint': typeof CommercialTintRoute
   '/detailing': typeof DetailingRoute
+  '/fleet-tint': typeof FleetTintRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
@@ -100,7 +116,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/ceramic-coating': typeof CeramicCoatingRoute
+  '/commercial-tint': typeof CommercialTintRoute
   '/detailing': typeof DetailingRoute
+  '/fleet-tint': typeof FleetTintRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
@@ -114,7 +132,9 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/ceramic-coating'
+    | '/commercial-tint'
     | '/detailing'
+    | '/fleet-tint'
     | '/gallery'
     | '/paint-protection-film'
     | '/tint-laws-new-mexico'
@@ -126,7 +146,9 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/ceramic-coating'
+    | '/commercial-tint'
     | '/detailing'
+    | '/fleet-tint'
     | '/gallery'
     | '/paint-protection-film'
     | '/tint-laws-new-mexico'
@@ -138,7 +160,9 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/ceramic-coating'
+    | '/commercial-tint'
     | '/detailing'
+    | '/fleet-tint'
     | '/gallery'
     | '/paint-protection-film'
     | '/tint-laws-new-mexico'
@@ -151,7 +175,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   CeramicCoatingRoute: typeof CeramicCoatingRoute
+  CommercialTintRoute: typeof CommercialTintRoute
   DetailingRoute: typeof DetailingRoute
+  FleetTintRoute: typeof FleetTintRoute
   GalleryRoute: typeof GalleryRoute
   PaintProtectionFilmRoute: typeof PaintProtectionFilmRoute
   TintLawsNewMexicoRoute: typeof TintLawsNewMexicoRoute
@@ -190,11 +216,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fleet-tint': {
+      id: '/fleet-tint'
+      path: '/fleet-tint'
+      fullPath: '/fleet-tint'
+      preLoaderRoute: typeof FleetTintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/detailing': {
       id: '/detailing'
       path: '/detailing'
       fullPath: '/detailing'
       preLoaderRoute: typeof DetailingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/commercial-tint': {
+      id: '/commercial-tint'
+      path: '/commercial-tint'
+      fullPath: '/commercial-tint'
+      preLoaderRoute: typeof CommercialTintRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ceramic-coating': {
@@ -239,7 +279,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CeramicCoatingRoute: CeramicCoatingRoute,
+  CommercialTintRoute: CommercialTintRoute,
   DetailingRoute: DetailingRoute,
+  FleetTintRoute: FleetTintRoute,
   GalleryRoute: GalleryRoute,
   PaintProtectionFilmRoute: PaintProtectionFilmRoute,
   TintLawsNewMexicoRoute: TintLawsNewMexicoRoute,

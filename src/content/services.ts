@@ -1,6 +1,15 @@
 // Per-service page content. Same rule as site.ts: this is owner-editable
 // copy — keep claims honest and Albuquerque-specific.
 
+// Business/commercial pages (building glass, fleet) don't use the vehicle-based
+// quote form — they use a single-screen business lead form driven by this config.
+export type CommercialLead = {
+  blurb: string;
+  selectLabel: string;
+  selectOptions: string[];
+  goalOptions: string[];
+};
+
 export type ServiceContent = {
   slug: string;
   /** Must match the service name in site.services so the quote form preselects. */
@@ -16,6 +25,10 @@ export type ServiceContent = {
   included: string[];
   faqs: { q: string; a: string }[];
   priceNote: string;
+  /** Which quote form the page embeds. Defaults to the vehicle form ("auto"). */
+  variant?: "auto" | "commercial" | "fleet";
+  /** Field config for the business lead form (variant !== "auto"). */
+  lead?: CommercialLead;
 };
 
 export const services: ServiceContent[] = [
@@ -198,6 +211,141 @@ export const services: ServiceContent[] = [
       },
     ],
     priceNote: "Details are priced by vehicle size and condition, flat-rate before we start. Request a quote or call for same-week availability.",
+  },
+  {
+    slug: "commercial-tint",
+    serviceName: "Commercial & Home Tint",
+    navLabel: "Commercial Tint",
+    metaTitle: "Commercial & Home Window Tint in Albuquerque, NM | Evo Solutions",
+    metaDescription:
+      "Professional flat-glass window tint for Albuquerque offices, storefronts, warehouses, and homes. Cut cooling bills, kill glare, stop fading, and add privacy or security film. Free on-site assessment.",
+    tag: "Buildings & Storefronts",
+    headline: "Cut the heat, glare, and fading — building-wide.",
+    intro:
+      "The same New Mexico sun that bakes cars runs up your cooling bill, washes out screens, and fades merchandise and furniture. Architectural window film goes on your existing glass — offices, storefronts, warehouses, medical suites, and homes — to reject heat, cut glare, and protect what's inside, without replacing a single window.",
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80",
+    sellingPoints: [
+      {
+        title: "Lower cooling bills",
+        body: "Solar-control film rejects a large share of the heat coming through your glass, so your A/C stops fighting the afternoon sun. West- and south-facing glass is where it pays off fastest.",
+      },
+      {
+        title: "Glare, privacy, and security film",
+        body: "Kill the glare on monitors and displays, add daytime privacy without going dark, or step up to safety film that holds shattered glass together against break-ins and storms.",
+      },
+      {
+        title: "Stops fading in its tracks",
+        body: "Blocking 99% of UV protects inventory, flooring, artwork, and furniture from the sun-fade that costs retailers and homeowners real money every year.",
+      },
+    ],
+    included: [
+      "Free on-site assessment and measurements",
+      "Film recommendation matched to each side of the building",
+      "Clean, professional flat-glass installation",
+      "Minimal disruption — scheduled around your hours",
+      "Manufacturer warranty on the film",
+    ],
+    faqs: [
+      {
+        q: "Do you tint homes too, or just commercial buildings?",
+        a: "Both. The same solar-control and security films work on residential glass — we do sunrooms, west-facing living rooms, and whole homes alongside offices and storefronts. Tell us the space and we'll spec it.",
+      },
+      {
+        q: "Will the windows look mirrored or dark?",
+        a: "Only if you want them to. Modern architectural film comes in nearly-clear options that reject heat without changing how the glass looks, all the way up to reflective privacy finishes. We'll match the look to your building.",
+      },
+      {
+        q: "What's security or safety film?",
+        a: "A thicker, bonded film that holds glass together when it breaks — slowing forced entry and containing shattered glass from storms or accidents. Popular for ground-floor retail and glass doors. Ask us if it fits your space.",
+      },
+    ],
+    priceNote:
+      "Commercial and home jobs are quoted by square footage and film type after a quick on-site assessment — no vehicle-style flat rate. Send the details below and we'll set up a free walkthrough.",
+    variant: "commercial",
+    lead: {
+      blurb: "Tell us about the space and we'll set up a free on-site assessment.",
+      selectLabel: "Property type",
+      selectOptions: [
+        "Office",
+        "Retail / storefront",
+        "Warehouse / industrial",
+        "Medical / dental",
+        "Restaurant / hospitality",
+        "Home / residential",
+        "Other",
+      ],
+      goalOptions: [
+        "Heat & energy savings",
+        "Glare reduction",
+        "Privacy",
+        "Security / safety film",
+        "UV & fade protection",
+        "Not sure yet",
+      ],
+    },
+  },
+  {
+    slug: "fleet-tint",
+    serviceName: "Fleet Vehicle Tint",
+    navLabel: "Fleet Tinting",
+    metaTitle: "Fleet & Business Vehicle Tint in Albuquerque, NM | Evo Solutions",
+    metaDescription:
+      "Window tint for Albuquerque business fleets — vans, work trucks, service vehicles, and company cars. Volume pricing, one point of contact, and scheduling that keeps your vehicles working.",
+    tag: "For Businesses",
+    headline: "Your whole fleet, tinted right.",
+    intro:
+      "Cooler cabs make for happier drivers, and a consistent tint spec makes your vans and trucks look like one professional operation instead of a mismatched lot. We tint business fleets — service vans, work trucks, company cars, and everything in between — with volume pricing and scheduling built around keeping your vehicles on the road.",
+    image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1400&q=80",
+    sellingPoints: [
+      {
+        title: "Volume pricing",
+        body: "Per-vehicle rates drop as the count goes up. Whether it's five vans or a fifty-truck fleet, you get one clear quote for the whole job.",
+      },
+      {
+        title: "Scheduled around your operations",
+        body: "We stage the work so your fleet keeps running — batches, early drop-offs, or after-hours where it makes sense. Downtime is the enemy and we plan around it.",
+      },
+      {
+        title: "One spec, one contact",
+        body: "Every vehicle gets the same film and the same shade, so the fleet looks uniform. You deal with one point of contact and one invoice — not a stack of individual tickets.",
+      },
+    ],
+    included: [
+      "Fleet consultation and film recommendation",
+      "Consistent film spec and shade across every vehicle",
+      "Scheduling batched around your operations",
+      "Lifetime manufacturer warranty on each vehicle",
+      "Single point of contact and consolidated billing",
+    ],
+    faqs: [
+      {
+        q: "How many vehicles do we need for fleet pricing?",
+        a: "Volume pricing generally kicks in around five vehicles, but reach out with whatever you've got — even a few work trucks. We'll put together a quote for the exact mix.",
+      },
+      {
+        q: "Can you work around our schedule?",
+        a: "That's the whole point of a fleet program. We batch vehicles, take early drop-offs, and arrange after-hours work where it makes sense so you're never waiting on your whole fleet at once.",
+      },
+      {
+        q: "Do you handle new vehicles as we add them?",
+        a: "Yes — once we've set your fleet spec, adding a new van or truck later is a quick call. Same film, same shade, same pricing, so the fleet stays consistent as it grows.",
+      },
+    ],
+    priceNote:
+      "Fleet jobs are quoted by vehicle count and mix, not a single flat rate. Send your fleet details below and we'll build a per-vehicle quote and a schedule that keeps you running.",
+    variant: "fleet",
+    lead: {
+      blurb: "Tell us about your fleet and we'll build a per-vehicle quote.",
+      selectLabel: "Fleet size",
+      selectOptions: ["2–5 vehicles", "6–15 vehicles", "16–30 vehicles", "30+ vehicles"],
+      goalOptions: [
+        "Heat & driver comfort",
+        "Uniform look across the fleet",
+        "UV & interior protection",
+        "Privacy / security",
+        "Not sure yet",
+      ],
+    },
   },
 ];
 
