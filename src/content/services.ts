@@ -258,13 +258,17 @@ export const services: ServiceContent[] = [
         q: "What's security or safety film?",
         a: "A thicker, bonded film that holds glass together when it breaks — slowing forced entry and containing shattered glass from storms or accidents. Popular for ground-floor retail and glass doors. Ask us if it fits your space.",
       },
+      {
+        q: "Do you tint fleet or commercial vehicles too?",
+        a: "We do — alongside building glass we tint business vehicles like service vans, work trucks, and company cars, with volume pricing for fleets. Pick \"Fleet / company vehicles\" below or just call us, and we'll fold it into the same quote.",
+      },
     ],
     priceNote:
       "Commercial and home jobs are quoted by square footage and film type after a quick on-site assessment — no vehicle-style flat rate. Send the details below and we'll set up a free walkthrough.",
     variant: "commercial",
     lead: {
       blurb: "Tell us about the space and we'll set up a free on-site assessment.",
-      selectLabel: "Property type",
+      selectLabel: "What can we tint?",
       selectOptions: [
         "Office",
         "Retail / storefront",
@@ -272,6 +276,7 @@ export const services: ServiceContent[] = [
         "Medical / dental",
         "Restaurant / hospitality",
         "Home / residential",
+        "Fleet / company vehicles",
         "Other",
       ],
       goalOptions: [
@@ -280,69 +285,6 @@ export const services: ServiceContent[] = [
         "Privacy",
         "Security / safety film",
         "UV & fade protection",
-        "Not sure yet",
-      ],
-    },
-  },
-  {
-    slug: "fleet-tint",
-    serviceName: "Fleet Vehicle Tint",
-    navLabel: "Fleet Tinting",
-    metaTitle: "Fleet & Business Vehicle Tint in Albuquerque, NM | Evo Solutions",
-    metaDescription:
-      "Window tint for Albuquerque business fleets — vans, work trucks, service vehicles, and company cars. Volume pricing, one point of contact, and scheduling that keeps your vehicles working.",
-    tag: "For Businesses",
-    headline: "Your whole fleet, tinted right.",
-    intro:
-      "Cooler cabs make for happier drivers, and a consistent tint spec makes your vans and trucks look like one professional operation instead of a mismatched lot. We tint business fleets — service vans, work trucks, company cars, and everything in between — with volume pricing and scheduling built around keeping your vehicles on the road.",
-    image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1400&q=80",
-    sellingPoints: [
-      {
-        title: "Volume pricing",
-        body: "Per-vehicle rates drop as the count goes up. Whether it's five vans or a fifty-truck fleet, you get one clear quote for the whole job.",
-      },
-      {
-        title: "Scheduled around your operations",
-        body: "We stage the work so your fleet keeps running — batches, early drop-offs, or after-hours where it makes sense. Downtime is the enemy and we plan around it.",
-      },
-      {
-        title: "One spec, one contact",
-        body: "Every vehicle gets the same film and the same shade, so the fleet looks uniform. You deal with one point of contact and one invoice — not a stack of individual tickets.",
-      },
-    ],
-    included: [
-      "Fleet consultation and film recommendation",
-      "Consistent film spec and shade across every vehicle",
-      "Scheduling batched around your operations",
-      "Lifetime manufacturer warranty on each vehicle",
-      "Single point of contact and consolidated billing",
-    ],
-    faqs: [
-      {
-        q: "How many vehicles do we need for fleet pricing?",
-        a: "Volume pricing generally kicks in around five vehicles, but reach out with whatever you've got — even a few work trucks. We'll put together a quote for the exact mix.",
-      },
-      {
-        q: "Can you work around our schedule?",
-        a: "That's the whole point of a fleet program. We batch vehicles, take early drop-offs, and arrange after-hours work where it makes sense so you're never waiting on your whole fleet at once.",
-      },
-      {
-        q: "Do you handle new vehicles as we add them?",
-        a: "Yes — once we've set your fleet spec, adding a new van or truck later is a quick call. Same film, same shade, same pricing, so the fleet stays consistent as it grows.",
-      },
-    ],
-    priceNote:
-      "Fleet jobs are quoted by vehicle count and mix, not a single flat rate. Send your fleet details below and we'll build a per-vehicle quote and a schedule that keeps you running.",
-    variant: "fleet",
-    lead: {
-      blurb: "Tell us about your fleet and we'll build a per-vehicle quote.",
-      selectLabel: "Fleet size",
-      selectOptions: ["2–5 vehicles", "6–15 vehicles", "16–30 vehicles", "30+ vehicles"],
-      goalOptions: [
-        "Heat & driver comfort",
-        "Uniform look across the fleet",
-        "UV & interior protection",
-        "Privacy / security",
         "Not sure yet",
       ],
     },

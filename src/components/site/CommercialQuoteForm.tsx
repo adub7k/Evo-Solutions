@@ -45,7 +45,7 @@ export function CommercialQuoteForm({ service }: { service: ServiceContent }) {
     if (name.trim().length < 2) e.name = "Please enter your name";
     if (!isValidPhone(phone)) e.phone = "Enter a valid 10-digit phone number";
     if (!isValidEmail(email)) e.email = "Enter a valid email address";
-    if (!project) e.project = `Select a ${cfg.selectLabel.toLowerCase()}`;
+    if (!project) e.project = "Please choose one";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
