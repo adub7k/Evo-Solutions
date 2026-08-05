@@ -10,6 +10,7 @@ const pageFor: Record<ServiceKey, string> = {
   ceramic: "/ceramic-coating",
   ppf: "/paint-protection-film",
   detail: "/detailing",
+  commercial: "/commercial-tint",
 };
 
 export function Services() {

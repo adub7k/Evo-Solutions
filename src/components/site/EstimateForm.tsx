@@ -54,7 +54,9 @@ const initial: Data = {
   appointmentTime: "",
 };
 
-const services = site.services.map((s) => s.name);
+// Commercial/building tint has its own non-vehicle quote flow (/commercial-tint),
+// so it's excluded from the vehicle estimate form's service chips.
+const services = site.services.filter((s) => s.key !== "commercial").map((s) => s.name);
 const vehicleTypes = ["Sedan", "Coupe", "SUV", "Truck", "Van", "Tesla / EV", "Other"];
 const goals = ["Heat Reduction", "UV Protection", "Privacy", "Appearance", "Interior Protection", "All of the above"];
 const timelines = ["This week", "This month", "Next 2–3 months", "Just researching"];

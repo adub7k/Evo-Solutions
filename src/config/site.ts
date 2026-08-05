@@ -1,5 +1,5 @@
 // Central site configuration — swap this out per tenant in ShopFlow.
-export type ServiceKey = "tint" | "ceramic" | "ppf" | "detail";
+export type ServiceKey = "tint" | "ceramic" | "ppf" | "detail" | "commercial";
 
 // NOTE: business details, stats, and testimonials below are DEMO PLACEHOLDERS.
 // Replace every value with the real shop's data before launching a tenant —
@@ -106,6 +106,17 @@ export const site = {
       image:
         "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1400&q=80",
       cta: "Book Detail",
+    },
+    {
+      key: "commercial" as const,
+      name: "Commercial & Home Tint",
+      tag: "Buildings & Storefronts",
+      description:
+        "Flat-glass window film for offices, storefronts, warehouses, and homes — cut cooling bills, kill glare, and stop fading without replacing a single window.",
+      benefits: ["Lower cooling bills", "Glare & UV control", "Security film option", "Offices, shops & homes"],
+      image:
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80",
+      cta: "Get Commercial Quote",
     },
   ],
   gallery: [
