@@ -14,6 +14,7 @@ import {
   submitLead,
   uploadPhotos,
 } from "@/lib/leads";
+import { trackAppointmentRequested, trackLeadCaptured } from "@/lib/analytics";
 
 type Data = {
   service: string;
@@ -156,6 +157,9 @@ export function EstimateForm({ defaultService }: { defaultService?: string } = {
         vehicle: { year: data.year, make: data.make, model: data.model, color: data.color, type: data.vehicleType },
         honeypot: data.honeypot,
       }).catch(() => {});
+      // GA4 conversion: the lead is real the moment contact details land, so
+      // count it here (once per phone) rather than waiting for scheduling.
+      trackLeadCaptured(data.service);
     }
     setStep((s) => s + 1);
   };
@@ -188,6 +192,7 @@ export function EstimateForm({ defaultService }: { defaultService?: string } = {
     setSending(false);
     if (res.ok) {
       setSubmitted(true);
+      trackAppointmentRequested(data.service);
     } else {
       setSubmitError(
         res.error === "network"

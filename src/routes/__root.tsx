@@ -44,6 +44,15 @@ const localBusinessLd = JSON.stringify({
   priceRange: "$$",
 });
 
+// Google Analytics 4 (gtag.js). Loaded in the SSR <head> so it's present on the
+// very first paint of every route. GA4's enhanced measurement auto-tracks page
+// views (incl. SPA route changes), scrolls, and outbound clicks with no extra code.
+const GA4_MEASUREMENT_ID = "G-0KB9XP0PFV";
+const ga4Init = `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA4_MEASUREMENT_ID}');`;
+
 const faqLd = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -170,6 +179,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: loaderData?.ogImage || OG_FALLBACK },
     ],
     scripts: [
+      { src: `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`, async: true },
+      { children: ga4Init },
       { type: "application/ld+json", children: localBusinessLd },
       { type: "application/ld+json", children: faqLd },
     ],
