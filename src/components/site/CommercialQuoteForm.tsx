@@ -9,7 +9,7 @@ import {
   isValidPhone,
   submitLead,
 } from "@/lib/leads";
-import { trackLeadCaptured } from "@/lib/analytics";
+import { trackLeadCaptured, trackQuoteAdsConversion } from "@/lib/analytics";
 
 // Single-screen lead form for the business/commercial pages (building glass,
 // fleet). These jobs aren't a year/make/model quote, so this replaces the
@@ -81,6 +81,7 @@ export function CommercialQuoteForm({ service }: { service: ServiceContent }) {
     if (res.ok) {
       setSubmitted(true);
       trackLeadCaptured(service.serviceName);
+      trackQuoteAdsConversion();
     } else {
       setSubmitError(
         res.error === "network"

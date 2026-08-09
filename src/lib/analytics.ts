@@ -26,3 +26,11 @@ export function trackLeadCaptured(service: string): void {
 export function trackAppointmentRequested(service: string): void {
   gtagEvent("book_appointment", { service });
 }
+
+// Marketing partner's Google Ads conversion ("EVO Quote Form Submit"). Fires
+// once per submitted quote, alongside the GA4 lead event. Reports to their
+// Ads account (AW-17888381819) via the second Google tag in __root.tsx.
+const GOOGLE_ADS_QUOTE_CONVERSION = "AW-17888381819/3RgDCMWTxNwcEPuW7NFC";
+export function trackQuoteAdsConversion(): void {
+  gtagEvent("conversion", { send_to: GOOGLE_ADS_QUOTE_CONVERSION });
+}

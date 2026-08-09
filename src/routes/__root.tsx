@@ -48,10 +48,15 @@ const localBusinessLd = JSON.stringify({
 // very first paint of every route. GA4's enhanced measurement auto-tracks page
 // views (incl. SPA route changes), scrolls, and outbound clicks with no extra code.
 const GA4_MEASUREMENT_ID = "G-0KB9XP0PFV";
+// Second Google tag: the marketing partner's Google Ads account (conversion
+// tracking + remarketing). Shares the single gtag.js loader above. An Ads (AW-)
+// tag only sends data to that Ads account — it can't inject scripts into the site.
+const GOOGLE_ADS_ID = "AW-17888381819";
 const ga4Init = `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${GA4_MEASUREMENT_ID}');`;
+gtag('config', '${GA4_MEASUREMENT_ID}');
+gtag('config', '${GOOGLE_ADS_ID}');`;
 
 const faqLd = JSON.stringify({
   "@context": "https://schema.org",
