@@ -6,3 +6,8 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+
+# Lovable manages this file's contents; reformatting it churns the block it
+# parses. src/routes/README.md is upstream boilerplate — leave both alone.
+AGENTS.md
+src/routes/README.md
