@@ -25,14 +25,24 @@ export function useScrolledPast(height: string) {
     return () => io.disconnect();
   }, []);
 
+  /*
+   * `opacity: 0` rather than `visibility: hidden`. Both are invisible, but
+   * visibility interacts with enough observer/AT edge cases that it isn't
+   * worth the ambiguity for an element whose only job is to be observed. It's
+   * a 1px transparent span with no background and no pointer events.
+   *
+   * Degrades safely: if the observer never reports, `past` stays false and the
+   * header simply doesn't compact and the sticky CTA doesn't appear. Nothing
+   * is hidden by it, unlike a scroll reveal.
+   */
   const style: CSSProperties = {
     position: "absolute",
     top: 0,
     left: 0,
     width: 1,
     height,
+    opacity: 0,
     pointerEvents: "none",
-    visibility: "hidden",
   };
 
   return { past, sentinel: <span ref={ref} aria-hidden="true" style={style} /> };

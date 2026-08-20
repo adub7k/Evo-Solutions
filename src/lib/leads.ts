@@ -77,6 +77,13 @@ export type LeadInput = {
    * above the customer's own note so the two don't get confused in the CRM.
    */
   extraLines?: string[];
+  /**
+   * Bypass the shop's required custom fields (vehicle year/make/model/colour).
+   * The server enforces those on every lead, which is right for a car but
+   * impossible for building glass — so non-vehicle leads opt out, exactly as
+   * the Meta/Make integration does.
+   */
+  skipRequiredCustomFields?: boolean;
   appointment?: { date: string; time: string }; // human-readable request
   photoUrls?: string[];
   honeypot?: string; // hidden "website" field — bots fill it, humans never see it
@@ -117,6 +124,7 @@ export async function submitLead(input: LeadInput): Promise<{ ok: boolean; error
         },
         utm,
         referrer,
+        ...(input.skipRequiredCustomFields ? { skipRequiredCustomFields: true } : {}),
         website: input.honeypot || "",
       }),
     });

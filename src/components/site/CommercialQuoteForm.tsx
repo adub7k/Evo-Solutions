@@ -201,6 +201,9 @@ export function CommercialQuoteForm({ lead }: { lead: CommercialLead }) {
         estimate && `Ballpark shown on site: ${money(estimate.low)}–${money(estimate.high)}`,
       ].filter(Boolean) as string[],
       vehicle: { year: "", make: "", model: "", type: "" },
+      // Building glass can't answer the vehicle custom fields the shop marks
+      // required, so opt out rather than sending blanks the server rejects.
+      skipRequiredCustomFields: true,
       photoUrls,
       honeypot: data.honeypot,
     });
@@ -211,7 +214,11 @@ export function CommercialQuoteForm({ lead }: { lead: CommercialLead }) {
       trackQuoteComplete("Commercial & Home Window Tint");
     } else {
       trackQuoteError(res.error || "unknown");
-      setError("We couldn't send that just then. Try again in a moment, or give the shop a call.");
+      setError(
+        res.error && res.error !== "network"
+          ? res.error
+          : "We couldn't send that just then. Try again in a moment, or give the shop a call.",
+      );
     }
   };
 

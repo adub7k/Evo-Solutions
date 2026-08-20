@@ -47,6 +47,7 @@ type Data = {
   year: string;
   make: string;
   model: string;
+  color: string;
   vehicleType: string;
   goal: string;
   timeline: string;
@@ -63,6 +64,7 @@ const initial: Data = {
   year: "",
   make: "",
   model: "",
+  color: "",
   vehicleType: "",
   goal: "",
   timeline: "",
@@ -79,7 +81,9 @@ const vehicleTypes = ["Sedan / Coupe", "SUV / Crossover", "Truck", "Van", "EV / 
 const timelines = ["As soon as possible", "In the next few weeks", "Just planning ahead"];
 const MAX_PHOTOS = 4;
 
-type Errors = Partial<Record<"year" | "make" | "model" | "name" | "phone" | "email", string>>;
+type Errors = Partial<
+  Record<"year" | "make" | "model" | "color" | "name" | "phone" | "email", string>
+>;
 
 export function QuoteForm({
   defaultService,
@@ -136,6 +140,9 @@ export function QuoteForm({
       if (!isValidYear(data.year)) e.year = "Enter a 4-digit year";
       if (data.make.trim().length < 2) e.make = "Required";
       if (data.model.trim().length < 1) e.model = "Required";
+      // The shop marks colour required on its lead form; without it the server
+      // rejects the lead outright, so it's collected here rather than lost.
+      if (data.color.trim().length < 1) e.color = "Required";
     }
     if (step === 4) {
       if (data.name.trim().length < 2) e.name = "Please enter your name";
@@ -148,7 +155,8 @@ export function QuoteForm({
 
   const canAdvance = () => {
     if (step === 0) return !!data.service;
-    if (step === 1) return !!(data.year && data.make && data.model && data.vehicleType);
+    if (step === 1)
+      return !!(data.year && data.make && data.model && data.color && data.vehicleType);
     if (step === 2) return !!(data.goal && data.timeline);
     if (step === 3) return true; // photos are optional by design
     if (step === 4) return !!(data.name && data.phone && data.email);
@@ -191,7 +199,7 @@ export function QuoteForm({
         year: data.year,
         make: data.make,
         model: data.model,
-        color: "",
+        color: data.color,
         type: data.vehicleType,
       },
       honeypot: data.honeypot,
@@ -215,7 +223,7 @@ export function QuoteForm({
       setSubmitError(
         res.error === "network"
           ? "We couldn't reach our system just then. Try again in a moment — or call and we'll take care of it right away."
-          : "Something went wrong sending that. Please try again, or give us a call.",
+          : res.error || "Something went wrong sending that. Please try again, or give us a call.",
       );
     }
   };
@@ -351,7 +359,13 @@ export function QuoteForm({
                   onChange={(v) => set("model", v)}
                   error={errors.model}
                   placeholder="Camry"
-                  className="col-span-2"
+                />
+                <Input
+                  label="Color"
+                  value={data.color}
+                  onChange={(v) => set("color", v)}
+                  error={errors.color}
+                  placeholder="Blue"
                 />
               </div>
             </Field>

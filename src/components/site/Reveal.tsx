@@ -26,10 +26,58 @@ type RevealProps = {
   as?: "div" | "section" | "article" | "li" | "span";
 };
 
-type Entry = { reveal: () => void };
+type Entry = { el: HTMLElement; reveal: () => void };
 
 let observer: IntersectionObserver | null = null;
 const registry = new WeakMap<Element, Entry>();
+
+/* ---- fail-open safety net -------------------------------------------------
+ * This site has form: it once shipped a build that rendered black on iOS
+ * because a throttled renderer stalled the reveal path. An observer that never
+ * delivers must never mean permanently invisible content, so alongside the
+ * IntersectionObserver there is ONE shared passive scroll/resize listener and
+ * a hard timeout. Whichever fires first wins; the listener is thrown away as
+ * soon as the last element has revealed.
+ *
+ * setTimeout, not requestAnimationFrame — rAF is exactly what stalls in a
+ * throttled renderer, which is the case this exists to survive. */
+const pending = new Set<Entry>();
+let listening = false;
+let queued = false;
+
+function sweep() {
+  queued = false;
+  const vh = window.innerHeight;
+  for (const entry of [...pending]) {
+    if (entry.el.getBoundingClientRect().top < vh * 0.96) entry.reveal();
+  }
+  if (!pending.size) stopListening();
+}
+
+function onScrollOrResize() {
+  if (queued || !pending.size) return;
+  queued = true;
+  setTimeout(sweep, 60);
+}
+
+function startListening() {
+  if (listening) return;
+  listening = true;
+  window.addEventListener("scroll", onScrollOrResize, { passive: true });
+  window.addEventListener("resize", onScrollOrResize, { passive: true });
+  window.addEventListener("orientationchange", onScrollOrResize, { passive: true });
+  // Last resort: if nothing has fired at all, show everything. A visitor
+  // seeing un-animated content is fine; a blank page is not.
+  setTimeout(() => pending.forEach((e) => e.reveal()), 2500);
+}
+
+function stopListening() {
+  if (!listening) return;
+  listening = false;
+  window.removeEventListener("scroll", onScrollOrResize);
+  window.removeEventListener("resize", onScrollOrResize);
+  window.removeEventListener("orientationchange", onScrollOrResize);
+}
 
 function getObserver(): IntersectionObserver | null {
   if (typeof IntersectionObserver === "undefined") return null;
@@ -67,23 +115,29 @@ export function Reveal({ children, delay = 0, className = "", as: Tag = "div" }:
     if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return;
 
     const io = getObserver();
+    // No observer at all (very old browser): leave the content visible.
     if (!io) return;
 
     setHidden(true);
     let done = false;
     const entry: Entry = {
+      el,
       reveal: () => {
         if (done) return;
         done = true;
+        pending.delete(entry);
         setHidden(false);
       },
     };
     registry.set(el, entry);
+    pending.add(entry);
     io.observe(el);
+    startListening();
 
     return () => {
       io.unobserve(el);
       registry.delete(el);
+      pending.delete(entry);
     };
   }, []);
 
