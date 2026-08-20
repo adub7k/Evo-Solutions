@@ -1,205 +1,279 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Menu, X, Phone, ChevronDown, ArrowRight } from "lucide-react";
 import { site } from "@/config/site";
 import { services } from "@/content/services";
-import { fetchSiteImages } from "@/lib/shopGallery";
-import { Menu, X, Phone, ChevronDown } from "lucide-react";
+import { trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
 
-// Real pages lead the nav so the site navigates like the multi-page site it
-// is; a couple of home-page sections stay as hash links.
-const serviceLinks = services.map((s) => ({ href: `/${s.slug}`, label: s.serviceName }));
+const LOGO_MARK = "/img/evo-solutions-logo-256.png";
+
+const serviceLinks = services.map((s) => ({ href: `/${s.slug}`, label: s.navLabel }));
 const primaryLinks = [
   { href: "/gallery", label: "Gallery" },
-  { href: "/blog", label: "Guides" },
+  { href: "/reviews", label: "Reviews" },
+  { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },
-  { href: "/#reviews", label: "Reviews" },
+  { href: "/contact", label: "Contact" },
 ];
 
-export function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false); // mobile menu
-  const [servicesOpen, setServicesOpen] = useState(false); // desktop dropdown
+export function Nav({ scrolled }: { scrolled: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [mobileServices, setMobileServices] = useState(false);
-  const [logo, setLogo] = useState<string | null>(null); // owner's uploaded logo
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // Lock body scroll while the mobile sheet is open.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // Escape closes whichever layer is open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      setServicesOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  useEffect(() => {
-    fetchSiteImages().then((imgs) => imgs.logo && setLogo(imgs.logo));
-  }, []);
+  // Small close delay so the pointer can cross the gap into the dropdown.
+  const openMenu = () => {
+    clearTimeout(closeTimer.current);
+    setServicesOpen(true);
+  };
+  const closeMenu = () => {
+    closeTimer.current = setTimeout(() => setServicesOpen(false), 120);
+  };
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ${
-        scrolled ? "py-2" : "py-4"
+      className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300 ease-out ${
+        scrolled || open
+          ? "border-border bg-background/95 shadow-[0_1px_0_0_rgba(255,255,255,0.03)] backdrop-blur-sm"
+          : "border-transparent bg-transparent"
       }`}
     >
       <div className="container-x">
         <div
-          className={`flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-colors duration-300 ${
-            scrolled ? "glass shadow-elevated" : ""
+          className={`flex items-center justify-between gap-4 transition-[height] duration-300 ease-out ${
+            scrolled ? "h-[3.75rem]" : "h-[4.5rem]"
           }`}
         >
-          <Link to="/" className="flex items-center gap-2 min-w-0" aria-label={site.business.name}>
-            {logo ? (
-              <img
-                src={logo}
-                alt={site.business.name}
-                className="h-10 sm:h-11 w-auto max-w-[220px] object-contain"
-              />
-            ) : (
-              <>
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg ember-gradient">
-                  <span className="font-display text-lg text-primary-foreground">
-                    {site.business.name.charAt(0)}
-                  </span>
-                </div>
-                <span className="font-display text-xl sm:text-2xl truncate">{site.business.name}</span>
-              </>
-            )}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 min-w-0"
+            aria-label={`${site.business.name} — home`}
+          >
+            {/*
+              Deliberately the bundled mark, not the ShopFlow upload. Angelo's
+              logo there is a JPEG of the badge on a solid black card with no
+              alpha, so it renders as a black box against the dark page. This
+              is the same artwork with the card keyed out. Blend modes can't
+              fix it here — the fixed header is its own stacking context, so
+              the image has no page backdrop to blend against.
+              To change it: replace /public/img/evo-solutions-logo-*.png.
+            */}
+            <img
+              src={LOGO_MARK}
+              alt=""
+              width={40}
+              height={40}
+              className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 object-contain"
+            />
+            <span className="font-display text-[1.0625rem] sm:text-lg font-bold tracking-[-0.02em] uppercase leading-none">
+              Evo Solutions
+            </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-7">
-            {/* Services dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setServicesOpen(true)}
-              onMouseLeave={() => setServicesOpen(false)}
-            >
+          <nav className="hidden lg:flex items-center gap-1" aria-label="Main">
+            <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
               <button
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setServicesOpen((v) => !v)}
                 aria-expanded={servicesOpen}
+                aria-haspopup="true"
               >
                 Services
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${servicesOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${servicesOpen ? "rotate-180" : ""}`}
+                />
               </button>
-              {servicesOpen && (
-                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-3">
-                  <div className="w-56 rounded-2xl glass shadow-elevated p-2">
+              <div
+                className={`absolute left-0 top-full pt-2 transition-[opacity,transform] duration-200 ease-out ${
+                  servicesOpen
+                    ? "pointer-events-auto translate-y-0 opacity-100"
+                    : "pointer-events-none -translate-y-1 opacity-0"
+                }`}
+              >
+                {
+                  <div className="panel w-64 p-1.5 shadow-[var(--shadow-lift)]">
                     {serviceLinks.map((l) => (
-                      <a
+                      <Link
                         key={l.href}
-                        href={l.href}
-                        className="block rounded-xl px-4 py-2.5 text-sm text-foreground/85 hover:bg-surface-elevated hover:text-foreground transition-colors"
+                        to={l.href}
+                        onClick={() => setServicesOpen(false)}
+                        className="block rounded-md px-3 py-2.5 text-sm text-foreground/85 hover:bg-surface-2 hover:text-foreground transition-colors"
                       >
                         {l.label}
-                      </a>
+                      </Link>
                     ))}
-                    <a
-                      href="/tint-laws-new-mexico"
-                      className="block rounded-xl px-4 py-2.5 text-sm text-accent hover:bg-surface-elevated transition-colors"
+                    <div className="my-1.5 h-px bg-border" />
+                    <Link
+                      to="/tint-laws-new-mexico"
+                      onClick={() => setServicesOpen(false)}
+                      className="block rounded-md px-3 py-2.5 text-sm text-accent transition-colors hover:bg-surface-2"
                     >
-                      NM Tint Law Guide
-                    </a>
+                      New Mexico tint laws →
+                    </Link>
                   </div>
-                </div>
-              )}
+                }
+              </div>
             </div>
 
             {primaryLinks.map((l) => (
-              <a
+              <Link
                 key={l.href}
-                href={l.href}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-accent after:transition-all hover:after:w-full"
+                to={l.href}
+                className="nav-link rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                activeProps={{
+                  className: "nav-link is-active rounded-md px-3 py-2 text-sm text-foreground",
+                }}
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2">
             <a
               href={site.business.phoneHref}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+              onClick={() => trackPhoneClick("nav")}
+              className="hidden xl:flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <Phone className="h-4 w-4" />
               {site.business.phone}
             </a>
-            <a
-              href="/#quote"
-              className="inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:brightness-110 transition-all shadow-glow"
+            <Link
+              to="/quote"
+              onClick={() => trackQuoteClick("nav")}
+              className="btn btn-primary text-sm"
             >
-              Get Free Quote
-            </a>
+              Get My Free Quote
+            </Link>
           </div>
 
           <button
             onClick={() => setOpen((v) => !v)}
-            className="lg:hidden grid place-items-center h-10 w-10 rounded-lg hairline"
-            aria-label="Toggle menu"
+            className="lg:hidden grid h-11 w-11 -mr-2 place-items-center rounded-md text-foreground"
+            aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
+            aria-controls="mobile-menu"
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
+      </div>
 
-        {open && (
-          <div className="lg:hidden mt-2 glass rounded-2xl p-4 animate-fade-in">
-            <nav className="flex flex-col gap-1">
-              {/* Services accordion */}
-              <button
-                onClick={() => setMobileServices((v) => !v)}
-                className="flex items-center justify-between px-3 py-3 rounded-lg text-foreground hover:bg-surface-elevated transition-colors"
-                aria-expanded={mobileServices}
-              >
-                Services
-                <ChevronDown className={`h-4 w-4 transition-transform ${mobileServices ? "rotate-180" : ""}`} />
-              </button>
-              {mobileServices && (
-                <div className="ml-3 flex flex-col border-l border-border/60 pl-3">
-                  {serviceLinks.map((l) => (
-                    <a
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm text-foreground/85 hover:bg-surface-elevated transition-colors"
-                    >
-                      {l.label}
-                    </a>
-                  ))}
-                  <a
-                    href="/tint-laws-new-mexico"
+      {/*
+        Always mounted so closing animates too — conditionally rendering it
+        meant the sheet vanished instantly on close, which read as a flash.
+        Hidden from assistive tech and taken out of the tab order when closed.
+      */}
+      <div
+        id="mobile-menu"
+        aria-hidden={!open}
+        inert={!open}
+        className={`fixed inset-x-0 bottom-0 z-50 overflow-y-auto overscroll-contain border-t border-border bg-background transition-[opacity,transform] duration-250 ease-out lg:hidden ${
+          scrolled ? "top-[3.75rem]" : "top-[4.5rem]"
+        } ${open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"}`}
+      >
+        <nav className="container-x flex flex-col py-5" aria-label="Mobile">
+          <button
+            onClick={() => setMobileServices((v) => !v)}
+            className="flex items-center justify-between py-3.5 text-left font-display text-lg font-semibold"
+            aria-expanded={mobileServices}
+            aria-controls="mobile-services"
+          >
+            Services
+            <ChevronDown
+              className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${
+                mobileServices ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {/* 0fr -> 1fr animates height without measuring anything in JS. */}
+          <div
+            id="mobile-services"
+            className={`grid transition-[grid-template-rows] duration-250 ease-out ${
+              mobileServices ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="mb-2 ml-1 flex flex-col border-l border-border pl-4">
+                {serviceLinks.map((l) => (
+                  <Link
+                    key={l.href}
+                    to={l.href}
                     onClick={() => setOpen(false)}
-                    className="px-3 py-2.5 rounded-lg text-sm text-accent hover:bg-surface-elevated transition-colors"
+                    className="py-3 text-[0.9375rem] text-muted-foreground"
                   >
-                    NM Tint Law Guide
-                  </a>
-                </div>
-              )}
-
-              {primaryLinks.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
+                    {l.label}
+                  </Link>
+                ))}
+                <Link
+                  to="/tint-laws-new-mexico"
                   onClick={() => setOpen(false)}
-                  className="px-3 py-3 rounded-lg text-foreground hover:bg-surface-elevated transition-colors"
+                  className="py-3 text-[0.9375rem] text-accent"
                 >
-                  {l.label}
-                </a>
-              ))}
-              <a
-                href={site.business.phoneHref}
-                className="px-3 py-3 rounded-lg text-muted-foreground hover:bg-surface-elevated flex items-center gap-2"
-              >
-                <Phone className="h-4 w-4" />
-                {site.business.phone}
-              </a>
-              <a
-                href="/#quote"
-                onClick={() => setOpen(false)}
-                className="mt-2 inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-medium text-accent-foreground"
-              >
-                Get Free Quote
-              </a>
-            </nav>
+                  New Mexico tint laws
+                </Link>
+              </div>
+            </div>
           </div>
-        )}
+
+          {primaryLinks.map((l) => (
+            <Link
+              key={l.href}
+              to={l.href}
+              onClick={() => setOpen(false)}
+              className="border-t border-border py-3.5 font-display text-lg font-semibold"
+            >
+              {l.label}
+            </Link>
+          ))}
+
+          <Link
+            to="/quote"
+            onClick={() => {
+              trackQuoteClick("mobile-menu");
+              setOpen(false);
+            }}
+            className="btn btn-primary btn-lg mt-6"
+          >
+            Get My Free Quote
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <a
+            href={site.business.phoneHref}
+            onClick={() => trackPhoneClick("mobile-menu")}
+            className="btn btn-ghost mt-3"
+          >
+            <Phone className="h-4 w-4" />
+            {site.business.phone}
+          </a>
+          <p className="mt-6 pb-8 text-sm text-muted-foreground">
+            {site.business.address}
+            <br />
+            Mon–Sat 10:00 AM – 6:00 PM
+          </p>
+        </nav>
       </div>
     </header>
   );

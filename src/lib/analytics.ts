@@ -1,9 +1,24 @@
-// Google Analytics 4 event helpers.
-// gtag.js is loaded once in the SSR <head> (see routes/__root.tsx). These
-// wrappers are best-effort and safe no-ops when gtag isn't available — during
-// SSR, before the script loads, or when an ad/tracker blocker strips it.
-// Analytics must NEVER throw into the lead-capture flow.
-type Gtag = (command: "event", event: string, params?: Record<string, unknown>) => void;
+/**
+ * Analytics event layer.
+ *
+ * gtag.js is loaded once in the SSR <head> (routes/__root.tsx) and feeds two
+ * destinations: GA4 (G-0KB9XP0PFV) and the marketing partner's Google Ads
+ * account (AW-17888381819). A Meta Pixel is loaded from the same place when a
+ * pixel ID is configured.
+ *
+ * Every helper here is best-effort and a no-op when the tag isn't available —
+ * during SSR, before the script loads, or when a blocker strips it. Analytics
+ * must NEVER throw into the lead-capture flow: a broken tracker may not cost
+ * Angelo a lead.
+ */
+
+type Gtag = (
+  command: "event" | "config" | "js",
+  target: string,
+  params?: Record<string, unknown>,
+) => void;
+
+type Fbq = (command: string, event: string, params?: Record<string, unknown>) => void;
 
 function gtagEvent(event: string, params: Record<string, unknown> = {}): void {
   try {
@@ -11,26 +26,87 @@ function gtagEvent(event: string, params: Record<string, unknown> = {}): void {
     const gtag = (window as unknown as { gtag?: Gtag }).gtag;
     if (typeof gtag === "function") gtag("event", event, params);
   } catch {
-    /* best-effort: never let analytics break the form */
+    /* never let analytics break the page */
   }
 }
 
-// A visitor became a lead — contact details captured (GA4 recommended event).
-// Fired once per lead, at the moment the phone/email/name first validate, so it
-// mirrors ShopFlow's lead count even when the visitor bails before scheduling.
+function fbqEvent(event: string, params: Record<string, unknown> = {}): void {
+  try {
+    if (typeof window === "undefined") return;
+    const fbq = (window as unknown as { fbq?: Fbq }).fbq;
+    if (typeof fbq === "function") fbq("track", event, params);
+  } catch {
+    /* no-op */
+  }
+}
+
+/* --------------------------------------------------------------- intent -- */
+
+/** Any "get a quote" button, anywhere. `location` names the section. */
+export function trackQuoteClick(location: string, service?: string): void {
+  gtagEvent("quote_cta_click", { location, service: service ?? "unspecified" });
+}
+
+/** tel: link tapped. The highest-intent action on mobile after a form submit. */
+export function trackPhoneClick(location: string): void {
+  gtagEvent("phone_click", { location });
+  fbqEvent("Contact", { method: "phone" });
+}
+
+/** mailto: or the contact page form. */
+export function trackContactClick(method: "email" | "directions" | "map"): void {
+  gtagEvent("contact_click", { method });
+}
+
+/* ----------------------------------------------------------------- form -- */
+
+/** Fired once, when the visitor interacts with the quote form for real. */
+export function trackQuoteStart(service: string): void {
+  gtagEvent("quote_start", { service });
+  fbqEvent("InitiateCheckout", { content_category: service });
+}
+
+/** Each completed step — this is what shows you where people drop out. */
+export function trackQuoteStep(stepIndex: number, stepName: string, service: string): void {
+  gtagEvent("quote_step", { step_index: stepIndex, step_name: stepName, service });
+}
+
+/**
+ * A visitor became a lead — contact details captured and sent to ShopFlow.
+ * Fires once per phone number, at the moment contact details validate, so it
+ * mirrors ShopFlow's lead count even if the visitor bails afterwards.
+ */
 export function trackLeadCaptured(service: string): void {
-  gtagEvent("generate_lead", { service });
+  gtagEvent("generate_lead", { service, currency: "USD", value: 1 });
+  fbqEvent("Lead", { content_category: service });
 }
 
-// A lead completed the flow and requested an appointment (GA4 recommended event).
-export function trackAppointmentRequested(service: string): void {
-  gtagEvent("book_appointment", { service });
-}
-
-// Marketing partner's Google Ads conversion ("EVO Quote Form Submit"). Fires
-// once per submitted quote, alongside the GA4 lead event. Reports to their
-// Ads account (AW-17888381819) via the second Google tag in __root.tsx.
+/** Marketing partner's Google Ads conversion ("EVO Quote Form Submit"). */
 const GOOGLE_ADS_QUOTE_CONVERSION = "AW-17888381819/3RgDCMWTxNwcEPuW7NFC";
 export function trackQuoteAdsConversion(): void {
   gtagEvent("conversion", { send_to: GOOGLE_ADS_QUOTE_CONVERSION });
+}
+
+/** The form reached its success state. */
+export function trackQuoteComplete(service: string): void {
+  gtagEvent("quote_complete", { service });
+}
+
+/** The form failed to reach ShopFlow — worth alerting on in GA4. */
+export function trackQuoteError(reason: string): void {
+  gtagEvent("quote_error", { reason });
+}
+
+/* -------------------------------------------------------------- content -- */
+
+export function trackGalleryFilter(filter: string): void {
+  gtagEvent("gallery_filter", { filter });
+}
+
+export function trackGalleryOpen(caption: string): void {
+  gtagEvent("gallery_open", { caption });
+}
+
+export function trackGuideRead(slug: string): void {
+  gtagEvent("guide_read", { slug });
 }

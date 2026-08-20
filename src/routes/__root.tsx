@@ -1,9 +1,9 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
-  createRootRouteWithContext,
+  createRootRoute,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -12,80 +12,143 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { site } from "../config/site";
-import { publicApi, shopflow } from "../config/shopflow";
+import { images } from "../config/images";
 
-// Local-SEO structured data: an auto business lives or dies on "tint near me".
+/* ------------------------------------------------------------ analytics -- */
+
+const GA4_MEASUREMENT_ID = "G-0KB9XP0PFV";
+/** The marketing partner's Google Ads account (conversions + remarketing). */
+const GOOGLE_ADS_ID = "AW-17888381819";
+/**
+ * Meta Pixel. Empty until Angelo's agency supplies an ID — see VERIFY.md.
+ * When set, the pixel loads alongside gtag and lib/analytics.ts starts
+ * emitting Lead / InitiateCheckout events with no other changes needed.
+ */
+const META_PIXEL_ID = "";
+
+const gtagInit = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','${GA4_MEASUREMENT_ID}');
+gtag('config','${GOOGLE_ADS_ID}');`;
+
+const metaPixelInit = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;
+n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`;
+
+/* ------------------------------------------------------ structured data -- */
+
+/**
+ * One LocalBusiness node for the whole site, emitted from verified data only.
+ * aggregateRating comes straight from site.reviews — the same numbers the
+ * page displays — so the markup can never claim something the page doesn't.
+ */
 const localBusinessLd = JSON.stringify({
   "@context": "https://schema.org",
-  "@type": "AutoRepair",
+  "@type": "AutoDetailing",
+  "@id": `${site.url}/#business`,
   name: site.business.name,
-  description: site.business.tagline,
+  alternateName: site.business.formerName,
+  url: site.url,
   telephone: site.business.phone,
   email: site.business.email,
+  image: site.url + images.share,
+  logo: site.url + "/img/evo-solutions-mark-512.png",
+  priceRange: "$$",
   address: {
     "@type": "PostalAddress",
     streetAddress: site.business.addressParts.street,
     addressLocality: site.business.addressParts.city,
     addressRegion: site.business.addressParts.state,
     postalCode: site.business.addressParts.zip,
-    addressCountry: "US",
+    addressCountry: site.business.addressParts.country,
   },
-  areaServed: "Albuquerque, NM",
+  areaServed: [site.serviceArea.primary, ...site.serviceArea.nearby].map((name) => ({
+    "@type": "City",
+    name,
+  })),
+  openingHoursSpecification: site.business.hoursSchema.map((h) => ({
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: h.days,
+    opens: h.opens,
+    closes: h.closes,
+  })),
   aggregateRating: {
     "@type": "AggregateRating",
-    ratingValue: "5.0",
-    reviewCount: "18",
+    ratingValue: site.reviews.rating.toFixed(1),
+    reviewCount: String(site.reviews.count),
+    bestRating: "5",
   },
-  openingHoursSpecification: site.business.hours.map((h) => ({
-    "@type": "OpeningHoursSpecification",
-    dayOfWeek: h.day,
-    description: h.value,
-  })),
-  priceRange: "$$",
+  makesOffer: [
+    "Window Tint",
+    "Ceramic Coating",
+    "Paint Protection Film",
+    "Auto Detailing",
+    "Commercial Window Tint",
+  ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
 });
 
-// Google Analytics 4 (gtag.js). Loaded in the SSR <head> so it's present on the
-// very first paint of every route. GA4's enhanced measurement auto-tracks page
-// views (incl. SPA route changes), scrolls, and outbound clicks with no extra code.
-const GA4_MEASUREMENT_ID = "G-0KB9XP0PFV";
-// Second Google tag: the marketing partner's Google Ads account (conversion
-// tracking + remarketing). Shares the single gtag.js loader above. An Ads (AW-)
-// tag only sends data to that Ads account — it can't inject scripts into the site.
-const GOOGLE_ADS_ID = "AW-17888381819";
-const ga4Init = `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${GA4_MEASUREMENT_ID}');
-gtag('config', '${GOOGLE_ADS_ID}');`;
-
-const faqLd = JSON.stringify({
+const websiteLd = JSON.stringify({
   "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: site.faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
+  "@type": "WebSite",
+  name: site.business.name,
+  url: site.url,
 });
 
+/* ----------------------------------------------------------- boundaries -- */
+
+/** 404 still looks like Evo — logo, real links, and a route back to a quote. */
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-5 py-20 text-center">
+      <img
+        src="/img/evo-solutions-logo-256.png"
+        alt=""
+        width={56}
+        height={56}
+        className="h-14 w-14 object-contain"
+      />
+      <p className="eyebrow mt-6">Error 404</p>
+      <h1 className="mt-3 text-[clamp(2rem,5vw,3rem)]">This page doesn't exist.</h1>
+      <p className="mt-4 max-w-md text-muted-foreground">
+        It may have moved, or the link may be wrong. Everything we do is one tap away.
+      </p>
+
+      <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+        <Link to="/" className="btn btn-primary">
+          Back to home
+        </Link>
+        <Link to="/quote" className="btn btn-ghost">
+          Get a quote
+        </Link>
       </div>
+
+      <nav aria-label="Services" className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-2">
+        {[
+          { to: "/window-tint", label: "Window Tint" },
+          { to: "/ceramic-coating", label: "Ceramic Coating" },
+          { to: "/paint-protection-film", label: "PPF" },
+          { to: "/auto-detailing", label: "Detailing" },
+          { to: "/commercial-window-tint", label: "Commercial & Home" },
+          { to: "/gallery", label: "Our Work" },
+        ].map((l) => (
+          <Link
+            key={l.to}
+            to={l.to}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {l.label}
+          </Link>
+        ))}
+      </nav>
+
+      <a
+        href={site.business.phoneHref}
+        className="mt-8 text-sm text-muted-foreground hover:text-foreground"
+      >
+        Or call {site.business.phone}
+      </a>
     </div>
   );
 }
@@ -98,28 +161,23 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-5">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <h1 className="text-3xl">This page didn't load</h1>
+        <p className="mt-3 text-muted-foreground">
+          Something went wrong on our end. Try again, or call us on {site.business.phone}.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-7 flex flex-wrap justify-center gap-2.5">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="btn btn-primary"
           >
             Try again
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
+          <a href="/" className="btn btn-ghost">
             Go home
           </a>
         </div>
@@ -128,88 +186,60 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-// Link-preview image (og:image) shown when the site is shared in iMessage,
-// Messenger, etc. Falls back to a stock photo before any real work exists.
-const OG_FALLBACK =
-  "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80";
+/* ---------------------------------------------------------------- route -- */
 
-// Resolve share image + favicon from the shop's ShopFlow content in ONE fetch:
-//   • og:image — the newest Work Gallery photo becomes the social preview
-//   • logo     — the owner's uploaded logo (Settings → Website Photos → Logo)
-//     drives the browser-tab icon
-// Crawlers and the browser tab both read the SSR <head> and do NOT run JS, so
-// these must be picked server-side (not in a component effect). Never throws:
-// any failure/timeout falls back to the stock photo / static favicon so a slow
-// or down API can never break page rendering.
-async function resolveSiteMeta(): Promise<{ ogImage: string; logo: string | null }> {
-  if (!import.meta.env.SSR) return { ogImage: OG_FALLBACK, logo: null }; // only server HTML is crawled
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(publicApi("/info"), { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return { ogImage: OG_FALLBACK, logo: null };
-    const info = await res.json();
-    const abs = (u: string) => (u.startsWith("http") ? u : shopflow.apiBase + u);
-    const first = Array.isArray(info.gallery)
-      ? info.gallery.find((g: { url?: string }) => g && typeof g.url === "string" && g.url)
-      : null;
-    const logoRaw =
-      info.siteImages && typeof info.siteImages.logo === "string" ? info.siteImages.logo : "";
-    return {
-      ogImage: first ? abs(first.url) : OG_FALLBACK,
-      logo: logoRaw ? abs(logoRaw) : null,
-    };
-  } catch {
-    return { ogImage: OG_FALLBACK, logo: null };
-  }
-}
-
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async () => await resolveSiteMeta(),
-  head: ({ loaderData }) => ({
+export const Route = createRootRoute({
+  head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "theme-color", content: "#ffffff" },
-      { title: "Evo Solutions — Window Tint & Auto Detailing in Albuquerque, NM" },
+      { name: "theme-color", content: "#12151a" },
+      { name: "format-detection", content: "telephone=no" },
+      // Per-page routes override these via lib/seo.ts.
+      { title: `${site.business.name} — Window Tint, PPF & Detailing in Albuquerque, NM` },
       {
         name: "description",
         content:
-          "Premium ceramic window tint, PPF, ceramic coating, and detailing in Albuquerque, NM. 5.0★ Google rating, lifetime warranty, certified installers.",
+          "Window tint, paint protection film, ceramic coating and detailing in Albuquerque, New Mexico. Rated 5.0 on Google. Free quote.",
       },
-      { property: "og:type", content: "website" },
-      { property: "og:image", content: loaderData?.ogImage || OG_FALLBACK },
+      { property: "og:image", content: site.url + images.share },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:image", content: site.url + images.share },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: loaderData?.ogImage || OG_FALLBACK },
     ],
     scripts: [
       { src: `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`, async: true },
-      { children: ga4Init },
+      { children: gtagInit },
+      ...(META_PIXEL_ID ? [{ children: metaPixelInit }] : []),
       { type: "application/ld+json", children: localBusinessLd },
-      { type: "application/ld+json", children: faqLd },
+      { type: "application/ld+json", children: websiteLd },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      // Owner's uploaded logo becomes the tab icon; static files are the fallback
-      // when no logo is set (or the API was unreachable at SSR time).
-      ...(loaderData?.logo
-        ? [
-            { rel: "icon", href: loaderData.logo },
-            { rel: "apple-touch-icon", href: loaderData.logo },
-          ]
-        : [
-            { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-            { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-            { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-          ]),
+      /*
+       * Favicons are all generated from Evo's own shield. The classic
+       * /favicon.ico stays because browsers and Google's favicon crawler
+       * request that path by convention even when a <link> is declared —
+       * leaving a stale one there is how the wrong mark ends up in search
+       * results. It carries 16/32/48px so it stays sharp wherever it's used.
+       */
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: "/img/evo-solutions-mark-512.png", type: "image/png", sizes: "512x512" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap",
+        // Only the weights actually used: Archivo 600/700 for display type,
+        // Inter 400/500/600 for body and UI. display=swap so text paints in the
+        // fallback immediately rather than sitting invisible.
+        href: "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap",
       },
-      { rel: "preconnect", href: "https://images.unsplash.com" },
+      // The shop's photos are served from the ShopFlow host — warm the
+      // connection before the gallery starts requesting them.
+      { rel: "preconnect", href: "https://shopflowio.up.railway.app" },
     ],
   }),
   shellComponent: RootShell,
@@ -225,6 +255,12 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-foreground"
+        >
+          Skip to content
+        </a>
         {children}
         <Scripts />
       </body>
@@ -233,12 +269,14 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
+  // Keying on the path replays a short fade when the route changes, so pages
+  // arrive rather than snapping in. Not a loading screen — the markup is
+  // already there, this only softens the cut.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <QueryClientProvider client={queryClient}>
+    <div key={pathname} className="page-enter">
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-    </QueryClientProvider>
+    </div>
   );
 }

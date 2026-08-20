@@ -3,39 +3,89 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { services } from "./content/services";
-import { posts } from "./content/posts";
+import { guides } from "./content/guides";
 
 const SITE = "https://www.evosolution.org";
 
-// Sitemap + robots are served straight from here so they always reflect the
-// current routes/posts without a separate build step.
+/**
+ * Permanent redirects for URLs the previous version of the site published.
+ *
+ * The site is live and running Google Ads, so old paths are in ad
+ * destinations, the Google index and people's bookmarks. Dropping them would
+ * throw away the ranking they've built and send paid clicks to a 404.
+ */
+const REDIRECTS: Record<string, string> = {
+  "/detailing": "/auto-detailing",
+  "/commercial-tint": "/commercial-window-tint",
+  "/fleet-tinting": "/commercial-window-tint",
+  "/blog": "/guides",
+  // Old post slugs → their closest current guide.
+  "/blog/what-tint-percentage-should-i-get": "/guides/what-tint-percentage-should-i-get",
+  "/blog/ceramic-vs-carbon-vs-dyed-tint": "/guides/ceramic-vs-carbon-window-tint",
+  "/blog/new-tint-care-first-30-days": "/guides/how-long-does-window-tint-take-to-cure",
+  "/blog/ppf-vs-ceramic-coating": "/guides/ppf-vs-ceramic-coating",
+  // No direct equivalent — the coating page carries the wash guidance.
+  "/blog/how-to-wash-ceramic-coated-car": "/ceramic-coating",
+};
+
+function redirectResponse(pathname: string): Response | null {
+  // Tolerate a trailing slash so /detailing/ redirects too.
+  const clean = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const target = REDIRECTS[clean];
+  if (!target) return null;
+  return new Response(null, { status: 301, headers: { location: target } });
+}
+
+/**
+ * Sitemap and robots are generated here so they always reflect the real route
+ * list without a separate build step. Priorities are deliberate: the service
+ * pages are the paid-traffic landing pages and the money keywords.
+ */
 function buildSitemap(): string {
-  const staticPaths = [
-    "/",
-    ...services.map((s) => `/${s.slug}`),
-    "/tint-laws-new-mexico",
-    "/gallery",
-    "/blog",
-    "/about",
-    ...posts.map((p) => `/blog/${p.slug}`),
+  const entries: { path: string; priority: string; changefreq: string }[] = [
+    { path: "/", priority: "1.0", changefreq: "weekly" },
+    ...services.map((s) => ({ path: `/${s.slug}`, priority: "0.9", changefreq: "monthly" })),
+    { path: "/quote", priority: "0.8", changefreq: "monthly" },
+    { path: "/gallery", priority: "0.7", changefreq: "weekly" },
+    { path: "/reviews", priority: "0.6", changefreq: "monthly" },
+    { path: "/about", priority: "0.6", changefreq: "monthly" },
+    { path: "/contact", priority: "0.6", changefreq: "monthly" },
+    { path: "/tint-laws-new-mexico", priority: "0.8", changefreq: "yearly" },
+    { path: "/guides", priority: "0.6", changefreq: "weekly" },
+    ...guides.map((g) => ({ path: `/guides/${g.slug}`, priority: "0.5", changefreq: "yearly" })),
   ];
-  const urls = staticPaths
-    .map((p) => `  <url><loc>${SITE}${p}</loc></url>`)
+
+  const urls = entries
+    .map(
+      (e) =>
+        `  <url><loc>${SITE}${e.path}</loc><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`,
+    )
     .join("\n");
+
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
-const ROBOTS = `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`;
+const ROBOTS = `User-agent: *
+Allow: /
+
+Sitemap: ${SITE}/sitemap.xml
+`;
 
 function staticFileResponse(pathname: string): Response | null {
   if (pathname === "/sitemap.xml") {
     return new Response(buildSitemap(), {
-      headers: { "content-type": "application/xml; charset=utf-8" },
+      headers: {
+        "content-type": "application/xml; charset=utf-8",
+        "cache-control": "public, max-age=3600",
+      },
     });
   }
   if (pathname === "/robots.txt") {
     return new Response(ROBOTS, {
-      headers: { "content-type": "text/plain; charset=utf-8" },
+      headers: {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=3600",
+      },
     });
   }
   return null;
@@ -85,7 +135,10 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      const staticFile = staticFileResponse(new URL(request.url).pathname);
+      const { pathname } = new URL(request.url);
+      const redirect = redirectResponse(pathname);
+      if (redirect) return redirect;
+      const staticFile = staticFileResponse(pathname);
       if (staticFile) return staticFile;
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

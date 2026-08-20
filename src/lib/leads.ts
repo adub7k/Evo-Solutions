@@ -35,7 +35,7 @@ export function captureAttribution() {
     }
     sessionStorage.setItem(
       UTM_KEY,
-      JSON.stringify({ utm, referrer: document.referrer || "", landing: window.location.pathname })
+      JSON.stringify({ utm, referrer: document.referrer || "", landing: window.location.pathname }),
     );
   } catch {
     /* sessionStorage unavailable (private mode) — attribution is best-effort */
@@ -58,11 +58,25 @@ export type LeadInput = {
   name: string;
   phone: string;
   email: string;
+  /** Human-readable label, written into the notes for the owner to read. */
   service: string;
+  /**
+   * The exact option string configured in ShopFlow → lead form options.
+   * The server DROPS any `services` label it doesn't recognise, so this has to
+   * match the tenant's list character for character ("Window tint", not
+   * "Window Tint") or the lead arrives in the CRM with no service on it.
+   * Falls back to `service` when not supplied.
+   */
+  serviceTag?: string;
   goal: string;
   timeline: string;
   notes: string;
-  vehicle: { year: string; make: string; model: string; color: string; type: string };
+  vehicle: { year: string; make: string; model: string; color?: string; type: string };
+  /**
+   * Extra structured lines for non-vehicle leads (building glass), written
+   * above the customer's own note so the two don't get confused in the CRM.
+   */
+  extraLines?: string[];
   appointment?: { date: string; time: string }; // human-readable request
   photoUrls?: string[];
   honeypot?: string; // hidden "website" field — bots fill it, humans never see it
@@ -76,9 +90,11 @@ export async function submitLead(input: LeadInput): Promise<{ ok: boolean; error
   const noteLines = [
     `Service: ${input.service}`,
     input.vehicle.type && `Vehicle type: ${input.vehicle.type}`,
+    ...(input.extraLines ?? []),
     input.goal && `Goal: ${input.goal}`,
     input.timeline && `Timeline: ${input.timeline}`,
-    input.appointment && `Requested appointment: ${input.appointment.date} at ${input.appointment.time}`,
+    input.appointment &&
+      `Requested appointment: ${input.appointment.date} at ${input.appointment.time}`,
     input.photoUrls?.length && `Photos: ${input.photoUrls.join(" ")}`,
     input.notes && `Customer note: ${input.notes}`,
   ].filter(Boolean);
@@ -92,12 +108,12 @@ export async function submitLead(input: LeadInput): Promise<{ ok: boolean; error
         phone: input.phone.trim(),
         email: input.email.trim(),
         notes: noteLines.join("\n"),
-        services: [input.service],
+        services: [input.serviceTag || input.service],
         customFields: {
           vehicleYear: input.vehicle.year.trim(),
           vehicleMake: input.vehicle.make.trim(),
           vehicleModel: input.vehicle.model.trim(),
-          vehicleColor: input.vehicle.color.trim(),
+          vehicleColor: (input.vehicle.color ?? "").trim(),
         },
         utm,
         referrer,

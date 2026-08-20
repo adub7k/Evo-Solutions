@@ -1,156 +1,181 @@
-import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, MapPin, Clock, Star } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
+
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { Section, SectionHead } from "@/components/site/Section";
+import { Photo } from "@/components/site/Photo";
+import { GalleryGrid } from "@/components/site/GalleryGrid";
+import { Reviews, ReviewsCta } from "@/components/site/Reviews";
+import { FinalCTA } from "@/components/site/FinalCTA";
 import { Reveal } from "@/components/site/Reveal";
+
 import { site } from "@/config/site";
-import { fetchSiteTeam, type TeamMember } from "@/lib/shopGallery";
+import { images, bundledFor } from "@/config/images";
+import { whyEvo } from "@/content/home";
+import { useSiteImage, useSiteTeam } from "@/lib/shopGallery";
+import { seo, breadcrumbLd } from "@/lib/seo";
 
-const TITLE = "About Evo Solutions — Formerly MAD Detailing NM | Albuquerque";
+const PATH = "/about";
+const TITLE = "About Evo Solutions — Albuquerque Tint & Paint Protection Shop";
 const DESC =
-  "Evo Solutions is the next chapter of MAD Detailing NM — the same Albuquerque crew behind a 5.0-star Google rating, now offering window tint, PPF, ceramic coating, and detailing.";
-
-const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=" +
-  encodeURIComponent("MAD Detailing NM, 3500 Vista Alameda NE A, Albuquerque, NM 87113");
-
-// Owner-curated staff roster from ShopFlow (Settings → Meet the Team). Renders
-// nothing until real members exist — we never show placeholder/invented staff.
-function MeetTheTeam() {
-  const [team, setTeam] = useState<TeamMember[]>([]);
-
-  useEffect(() => {
-    fetchSiteTeam().then(setTeam);
-  }, []);
-
-  if (team.length === 0) return null;
-
-  return (
-    <section className="pb-20">
-      <div className="container-x max-w-5xl">
-        <Reveal className="max-w-2xl mb-12">
-          <div className="text-xs uppercase tracking-[0.24em] text-accent">Meet the Team</div>
-          <h2 className="mt-4 text-3xl sm:text-4xl text-balance">
-            The people behind the work.
-          </h2>
-        </Reveal>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {team.map((m, i) => (
-            <Reveal
-              key={m.id}
-              delay={i * 70}
-              className="rounded-3xl hairline bg-card/60 p-6 text-center sm:text-left"
-            >
-              <div className="flex flex-col items-center sm:flex-row sm:items-center gap-4">
-                {m.photo ? (
-                  <img
-                    src={m.photo}
-                    alt={m.name}
-                    loading="lazy"
-                    className="h-20 w-20 shrink-0 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-accent text-2xl font-medium text-accent-foreground">
-                    {m.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <div className="text-lg font-medium text-foreground">{m.name}</div>
-                  {m.title && <div className="text-sm text-accent">{m.title}</div>}
-                </div>
-              </div>
-              {m.bio && (
-                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
-              )}
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+  "Evo Solutions is an owner-run tint, PPF, coating and detailing shop on Vista Alameda in Albuquerque. Formerly MAD Detailing NM. Meet the crew.";
+const CRUMBS = [
+  { name: "Home", path: "/" },
+  { name: "About", path: PATH },
+];
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESC },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESC },
-    ],
-    links: [{ rel: "canonical", href: "https://www.evosolution.org/about" }],
-  }),
-  component: RouteComponent,
+  head: () => {
+    const meta = seo({ title: TITLE, description: DESC, path: PATH });
+    return {
+      ...meta,
+      scripts: [{ type: "application/ld+json", children: breadcrumbLd(CRUMBS) }],
+    };
+  },
+  component: About,
 });
 
-function RouteComponent() {
+function About() {
+  const team = useSiteTeam();
+  const shopPhoto = useSiteImage("service_detail", images.service.service_detail.webp);
+  const bundledShop = bundledFor("service_detail", shopPhoto);
+
   return (
     <SiteLayout>
-      <section className="pt-32 pb-16 sm:pt-40 sm:pb-20">
-        <div className="container-x max-w-3xl">
-          <div className="text-xs uppercase tracking-[0.24em] text-accent">Our Story</div>
-          <h1 className="mt-4 text-4xl sm:text-6xl text-balance leading-[1.05]">
-            Same crew. Same standards. New name.
-          </h1>
-          <div className="mt-8 space-y-6 text-muted-foreground leading-relaxed text-lg">
-            <p>
-              You might know us as <span className="text-foreground">MAD Detailing NM</span>.
-              For years we've been the shop on Vista Alameda that Albuquerque trusted with
-              interiors, corrections, and coatings — and earned a
-              <span className="text-foreground"> 5.0-star Google rating</span> doing it.
-            </p>
-            <p>
-              As the work grew beyond detailing — window tint, paint protection film, ceramic
-              coatings — the name needed to grow with it.
-              <span className="text-foreground"> Evo Solutions</span> is that next chapter:
-              the same people and the same obsession with getting details right, now covering
-              everything that protects and improves your vehicle.
-            </p>
-            <p>
-              Nothing about how we work changed. Flat quotes before we start. Films and
-              products we'd put on our own cars. And if something's not right, we make it
-              right — that's how the rating got to 5.0 and how it stays there.
-            </p>
+      <section className="pt-[4.5rem]">
+        <div className="container-x pb-12 pt-8 sm:pt-12">
+          <Breadcrumbs trail={CRUMBS} />
+
+          <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+            <div className="animate-rise">
+              <p className="eyebrow">About the shop</p>
+              <h1 className="mt-4">A small shop on Vista Alameda that takes this seriously.</h1>
+              <div className="mt-5 space-y-4 text-lg leading-relaxed text-muted-foreground">
+                <p>
+                  Evo Solutions is owner-run. Angelo is in the building, and the people whose faces
+                  are on this page are the people who'll be working on your car — not a rotating
+                  crew and not a subcontractor.
+                </p>
+                <p>
+                  We do window tint, paint protection film, ceramic coating and detailing, plus flat
+                  glass for offices, storefronts and homes across the metro.
+                </p>
+              </div>
+            </div>
+
+            <Photo src={shopPhoto} alt={images.service.service_detail.alt} ratio="4/3" priority />
           </div>
         </div>
       </section>
 
-      <MeetTheTeam />
-
-      <section className="pb-20">
-        <div className="container-x grid gap-6 max-w-3xl sm:grid-cols-3">
-          <Reveal className="rounded-3xl hairline bg-card/60 p-6">
-            <MapPin className="h-5 w-5 text-accent" />
-            <div className="mt-3 text-sm font-medium">Find us</div>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{site.business.address}</p>
-            <a href={MAPS_URL} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent hover:underline">
-              Directions <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </Reveal>
-          <Reveal delay={60} className="rounded-3xl hairline bg-card/60 p-6">
-            <Clock className="h-5 w-5 text-accent" />
-            <div className="mt-3 text-sm font-medium">Hours</div>
-            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-              {site.business.hours.map((h) => (
-                <li key={h.day} className="flex justify-between gap-3">
-                  <span>{h.day}</span>
-                  <span>{h.value}</span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <Reveal delay={120} className="rounded-3xl hairline bg-card/60 p-6">
-            <Star className="h-5 w-5 text-accent" />
-            <div className="mt-3 text-sm font-medium">5.0 on Google</div>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              Every review five stars. Read them, then come see why.
-            </p>
-            <a href="/#reviews" className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent hover:underline">
-              Read reviews <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </Reveal>
+      {/* The rename, stated plainly. Hiding it would look worse than owning it. */}
+      <Section tone="raised" tight>
+        <div className="container-x">
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+            <SectionHead
+              eyebrow="The name change"
+              title={`We used to be ${site.business.formerName}.`}
+            />
+            <Reveal
+              delay={60}
+              className="space-y-4 text-[1.0625rem] leading-relaxed text-muted-foreground"
+            >
+              <p>
+                The shop started out as {site.business.formerName} and built its reputation on
+                detail work. As the film side grew — tint, then paint protection, then commercial
+                glass — the old name stopped describing what we actually do all day.
+              </p>
+              <p>
+                So the sign changed. Nothing else did. Same owner, same crew, same address, and the
+                same Google profile — which is why some of the reviews on this site talk about
+                detailing rather than film.
+              </p>
+              <p className="text-foreground">
+                If you had work done here under the old name, you're still dealing with us.
+              </p>
+            </Reveal>
+          </div>
         </div>
-      </section>
+      </Section>
+
+      {/* Real team, straight from ShopFlow. Renders nothing if unset — we
+          don't invent staff. */}
+      {team.length > 0 && (
+        <Section>
+          <div className="container-x">
+            <SectionHead eyebrow="The crew" title="Who'll actually be working on it." />
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {team.map((m, i) => (
+                <Reveal key={m.id} delay={i * 60}>
+                  {m.photo && (
+                    <Photo
+                      src={m.photo}
+                      alt={`${m.name}, ${m.title} at Evo Solutions`}
+                      ratio="4/3"
+                    />
+                  )}
+                  <h3 className="mt-4 font-display text-xl font-semibold">{m.name}</h3>
+                  {m.title && <p className="mt-0.5 text-sm text-accent">{m.title}</p>}
+                  {m.bio && <p className="mt-2 leading-relaxed text-muted-foreground">{m.bio}</p>}
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </Section>
+      )}
+
+      <Section tone="raised">
+        <div className="container-x">
+          <SectionHead eyebrow="How we work" title="What you can expect from us." />
+          <div className="mt-10 grid gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            {whyEvo.map((w, i) => (
+              <Reveal key={w.title} delay={i * 40}>
+                <div className="h-px w-10 bg-accent" />
+                <h3 className="mt-4 font-display text-lg font-semibold">{w.title}</h3>
+                <p className="mt-2 leading-relaxed text-muted-foreground">{w.body}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section className="cv-auto">
+        <div className="container-x">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <SectionHead
+              eyebrow="In the shop"
+              title="What a week here looks like."
+              className="max-w-xl"
+            />
+            <Link to="/gallery" className="btn btn-ghost shrink-0">
+              See all our work
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <GalleryGrid limit={6} showFilters={false} />
+        </div>
+      </Section>
+
+      <Section tone="raised" className="cv-auto">
+        <div className="container-x">
+          <SectionHead
+            eyebrow={`${site.reviews.rating.toFixed(1)} on Google`}
+            title="What people say about us."
+            align="center"
+          />
+          <Reviews />
+          <div className="mt-8 text-center">
+            <ReviewsCta />
+          </div>
+        </div>
+      </Section>
+
+      <FinalCTA
+        heading="Come and see the place."
+        body="Walk-ins are welcome Mon–Sat. Or send us the details and we'll get you a price first."
+        location="about-final"
+      />
     </SiteLayout>
   );
 }

@@ -1,145 +1,144 @@
-import { Instagram, Facebook, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { site } from "@/config/site";
 import { services } from "@/content/services";
+import { guides } from "@/content/guides";
+import { trackContactClick, trackPhoneClick } from "@/lib/analytics";
+
+const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+  site.business.mapsQuery,
+)}`;
 
 export function Footer() {
+  const year = new Date().getFullYear();
+
   return (
-    <footer id="contact" className="border-t border-border/60 bg-surface/30 pt-20 pb-10">
-      <div className="container-x">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-6">
-          <div className="lg:col-span-2 max-w-md">
-            <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-lg ember-gradient">
-                <span className="font-display text-lg text-primary-foreground">
-                  {site.business.name.charAt(0)}
-                </span>
-              </div>
-              <span className="font-display text-2xl">{site.business.name}</span>
+    <footer className="border-t border-border bg-surface/30">
+      <div className="container-x py-14 sm:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+          {/* NAP block — this is the one Google reads. Keep it identical to
+              the Google Business Profile, character for character. */}
+          <div>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/img/evo-solutions-logo-256.png"
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+              />
+              <span className="font-display text-lg font-bold uppercase tracking-[-0.02em]">
+                Evo Solutions
+              </span>
             </div>
-            <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
-              {site.business.tagline}. Premium installations, lifetime warranties, and
-              the kind of attention to detail your vehicle deserves.
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Window tint, paint protection film, ceramic coating and detailing in Albuquerque, New
+              Mexico. Formerly {site.business.formerName}.
             </p>
 
-            <div className="mt-6 flex items-center gap-3">
+            <address className="mt-5 space-y-2.5 text-sm not-italic">
               <a
-                href={site.business.social.instagram}
-                aria-label="Instagram"
-                className="grid h-10 w-10 place-items-center rounded-full hairline hover:bg-surface-elevated transition"
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackContactClick("directions")}
+                className="flex items-start gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Instagram className="h-4 w-4" />
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <span>
+                  {site.business.addressParts.street}
+                  <br />
+                  {site.business.addressParts.city}, {site.business.addressParts.state}{" "}
+                  {site.business.addressParts.zip}
+                </span>
               </a>
               <a
-                href={site.business.social.facebook}
-                aria-label="Facebook"
-                className="grid h-10 w-10 place-items-center rounded-full hairline hover:bg-surface-elevated transition"
+                href={site.business.phoneHref}
+                onClick={() => trackPhoneClick("footer")}
+                className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Facebook className="h-4 w-4" />
+                <Phone className="h-4 w-4 shrink-0 text-accent" />
+                {site.business.phone}
               </a>
               <a
-                href={site.business.social.youtube}
-                aria-label="YouTube"
-                className="grid h-10 w-10 place-items-center rounded-full hairline hover:bg-surface-elevated transition"
+                href={site.business.emailHref}
+                onClick={() => trackContactClick("email")}
+                className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors break-all"
               >
-                <Youtube className="h-4 w-4" />
+                <Mail className="h-4 w-4 shrink-0 text-accent" />
+                {site.business.email}
               </a>
-            </div>
+              <div className="flex items-start gap-2.5 text-muted-foreground">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <span>
+                  {site.business.hours.map((h) => (
+                    <span key={h.day} className="block">
+                      {h.day}: {h.value}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            </address>
           </div>
 
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
-              Services
-            </div>
-            <ul className="space-y-3 text-sm">
-              {services.map((s) => (
-                <li key={s.slug}>
-                  <a
-                    href={`/${s.slug}`}
-                    className="text-foreground/85 hover:text-foreground transition"
-                  >
-                    {s.serviceName}
-                  </a>
-                </li>
-              ))}
-              <li>
-                <a href="/tint-laws-new-mexico" className="text-foreground/85 hover:text-foreground transition">
-                  NM Tint Laws
-                </a>
-              </li>
-            </ul>
-          </div>
+          <FooterCol title="Services">
+            {services.map((s) => (
+              <FooterLink key={s.slug} to={`/${s.slug}`}>
+                {s.serviceName}
+              </FooterLink>
+            ))}
+          </FooterCol>
 
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
-              Explore
-            </div>
-            <ul className="space-y-3 text-sm">
-              <li><a href="/gallery" className="text-foreground/85 hover:text-foreground transition">Gallery</a></li>
-              <li><a href="/blog" className="text-foreground/85 hover:text-foreground transition">Guides</a></li>
-              <li><a href="/about" className="text-foreground/85 hover:text-foreground transition">About</a></li>
-              <li><a href="/#quote" className="text-foreground/85 hover:text-foreground transition">Get a Quote</a></li>
-            </ul>
-          </div>
+          <FooterCol title="Company">
+            <FooterLink to="/gallery">Our Work</FooterLink>
+            <FooterLink to="/reviews">Reviews</FooterLink>
+            <FooterLink to="/about">About Evo</FooterLink>
+            <FooterLink to="/contact">Contact & Directions</FooterLink>
+            <FooterLink to="/quote">Get a Quote</FooterLink>
+          </FooterCol>
 
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
-              Contact
-            </div>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a
-                  href={site.business.phoneHref}
-                  className="flex items-start gap-3 text-foreground/85 hover:text-foreground transition"
-                >
-                  <Phone className="h-4 w-4 mt-0.5 text-accent shrink-0" />
-                  {site.business.phone}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${site.business.email}`}
-                  className="flex items-start gap-3 text-foreground/85 hover:text-foreground transition break-all"
-                >
-                  <Mail className="h-4 w-4 mt-0.5 text-accent shrink-0" />
-                  {site.business.email}
-                </a>
-              </li>
-              <li className="flex items-start gap-3 text-foreground/85">
-                <MapPin className="h-4 w-4 mt-0.5 text-accent shrink-0" />
-                {site.business.address}
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-5">
-              Hours
-            </div>
-            <ul className="space-y-2.5 text-sm">
-              {site.business.hours.map((h) => (
-                <li key={h.day} className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">{h.day}</span>
-                  <span className="text-foreground/85">{h.value}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterCol title="Guides">
+            <FooterLink to="/tint-laws-new-mexico">New Mexico Tint Laws</FooterLink>
+            {guides.slice(0, 4).map((g) => (
+              <FooterLink key={g.slug} to={`/guides/${g.slug}`}>
+                {g.navTitle}
+              </FooterLink>
+            ))}
+            <FooterLink to="/guides">All guides</FooterLink>
+          </FooterCol>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <div>
-            © {new Date().getFullYear()} {site.business.name}. All rights reserved.
-          </div>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground transition">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-foreground transition">
-              Terms of Service
-            </a>
-          </div>
+        <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {year} {site.business.name}. Albuquerque, New Mexico.
+          </p>
+          <p>Serving {site.serviceArea.primary} and the surrounding metro.</p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
+        {title}
+      </h3>
+      <ul className="mt-4 space-y-2.5">{children}</ul>
+    </div>
+  );
+}
+
+function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <li>
+      <Link
+        to={to}
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {children}
+      </Link>
+    </li>
   );
 }

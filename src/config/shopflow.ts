@@ -4,10 +4,10 @@
 //   VITE_SHOPFLOW_API_URL   e.g. https://shopflowio.up.railway.app
 //   VITE_SHOPFLOW_SHOP_SLUG e.g. mad-detailing
 export const shopflow = {
-  apiBase: (import.meta.env.VITE_SHOPFLOW_API_URL as string | undefined) ??
+  apiBase:
+    (import.meta.env.VITE_SHOPFLOW_API_URL as string | undefined) ??
     "https://shopflowio.up.railway.app",
-  shopSlug: (import.meta.env.VITE_SHOPFLOW_SHOP_SLUG as string | undefined) ??
-    "mad-detailing", // Angelo's ShopFlow tenant (Evo Solutions is the brand, mad-detailing is the slug)
+  shopSlug: (import.meta.env.VITE_SHOPFLOW_SHOP_SLUG as string | undefined) ?? "mad-detailing", // Angelo's ShopFlow tenant (Evo Solutions is the brand, mad-detailing is the slug)
 };
 
 export const publicApi = (path: string) =>

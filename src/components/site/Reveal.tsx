@@ -1,98 +1,98 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-interface RevealProps {
+/**
+ * Scroll reveal.
+ *
+ * Rules this follows, in order of importance:
+ *
+ *  1. **It can never strand content.** Server HTML ships everything visible.
+ *     Hiding only happens once JS has run and only for elements below the
+ *     fold, so no-JS, a failed hydration or a dead observer all leave a fully
+ *     readable page.
+ *  2. **One observer, not one per element.** A single shared
+ *     IntersectionObserver handles every Reveal on the page — no scroll
+ *     listeners anywhere.
+ *  3. **Only transform and opacity.** Both are compositor-friendly, so a
+ *     reveal never triggers layout or paint.
+ *  4. **Subtle.** 15px of travel over ~500ms, stagger capped at 180ms. It
+ *     should read as the page settling, not as an animation.
+ */
+
+type RevealProps = {
   children: ReactNode;
+  /** Stagger within a group, in ms. Capped — long chains read as lag. */
   delay?: number;
   className?: string;
   as?: "div" | "section" | "article" | "li" | "span";
-}
+};
 
-/* ---- shared scroll fallback ----
- * One window listener + one batched check for every Reveal on the page,
- * instead of a listener per instance (50+ of them made scrolling stutter).
- * Runs alongside IntersectionObserver; whichever fires first wins. */
-type Watcher = { el: HTMLElement; reveal: () => void };
-const watchers = new Set<Watcher>();
-let listening = false;
-let scheduled = false;
+type Entry = { reveal: () => void };
 
-function checkAll() {
-  scheduled = false;
-  const vh = window.innerHeight;
-  watchers.forEach((w) => {
-    if (w.el.getBoundingClientRect().top < vh * 0.96) w.reveal();
-  });
-}
-function onScrollOrResize() {
-  // setTimeout, not rAF: rAF stalls entirely in throttled renderers.
-  if (!scheduled && watchers.size) {
-    scheduled = true;
-    setTimeout(checkAll, 60);
+let observer: IntersectionObserver | null = null;
+const registry = new WeakMap<Element, Entry>();
+
+function getObserver(): IntersectionObserver | null {
+  if (typeof IntersectionObserver === "undefined") return null;
+  if (!observer) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          registry.get(e.target)?.reveal();
+          observer?.unobserve(e.target);
+          registry.delete(e.target);
+        }
+      },
+      // Fire a little before the element reaches the viewport so the motion
+      // has finished by the time it's properly in view.
+      { rootMargin: "0px 0px -8% 0px", threshold: 0 },
+    );
   }
-}
-function subscribe(w: Watcher) {
-  watchers.add(w);
-  if (!listening) {
-    listening = true;
-    window.addEventListener("scroll", onScrollOrResize, { passive: true });
-    window.addEventListener("resize", onScrollOrResize);
-    window.addEventListener("orientationchange", onScrollOrResize);
-  }
-  return () => watchers.delete(w);
+  return observer;
 }
 
-/* Scroll-reveal that can never strand content: SSR/no-JS ships everything
- * visible; hiding happens only once JS runs, and reveal triggers from the
- * observer or the shared scroll fallback — whichever arrives first. */
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function Reveal({ children, delay = 0, className = "", as: Tag = "div" }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  const [phase, setPhase] = useState<"idle" | "hidden" | "shown">("idle");
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return; // above fold: stay visible
+    if (!el || prefersReducedMotion()) return;
 
-    setPhase("hidden");
+    // Already on screen at mount (hero, first section) — leave it alone rather
+    // than hiding then re-showing, which reads as a flash.
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return;
 
+    const io = getObserver();
+    if (!io) return;
+
+    setHidden(true);
     let done = false;
-    const reveal = () => {
-      if (done) return;
-      done = true;
-      setPhase("shown");
-      unsubscribe();
-      io.disconnect();
+    const entry: Entry = {
+      reveal: () => {
+        if (done) return;
+        done = true;
+        setHidden(false);
+      },
     };
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && reveal()),
-      { threshold: 0, rootMargin: "0px 0px -40px 0px" },
-    );
+    registry.set(el, entry);
     io.observe(el);
-    const unsubscribe = subscribe({ el, reveal });
 
     return () => {
-      unsubscribe();
-      io.disconnect();
+      io.unobserve(el);
+      registry.delete(el);
     };
   }, []);
 
-  // Short stagger and a quick curve: reveal should trail the thumb by a
-  // beat, not by a second — long fades read as lag on mobile.
-  const cappedDelay = Math.min(delay, 180);
   return (
     <Tag
       ref={ref as never}
-      style={
-        phase === "idle"
-          ? undefined
-          : {
-              opacity: phase === "shown" ? 1 : 0,
-              transform: phase === "shown" ? "translateY(0)" : "translateY(14px)",
-              transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${cappedDelay}ms, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${cappedDelay}ms`,
-            }
-      }
-      className={className}
+      data-reveal={hidden ? "hidden" : "shown"}
+      style={hidden ? { transitionDelay: "0ms" } : { transitionDelay: `${Math.min(delay, 180)}ms` }}
+      className={`reveal ${className}`}
     >
       {children}
     </Tag>

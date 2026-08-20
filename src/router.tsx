@@ -1,16 +1,11 @@
-import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-export const getRouter = () => {
-  const queryClient = new QueryClient();
-
-  const router = createRouter({
+export const getRouter = () =>
+  createRouter({
     routeTree,
-    context: { queryClient },
+    // Restores scroll position on browser back/forward instead of dumping the
+    // visitor at the top of the previous page.
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   });
-
-  return router;
-};

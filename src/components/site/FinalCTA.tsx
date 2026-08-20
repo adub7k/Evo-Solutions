@@ -1,40 +1,53 @@
-import { ArrowRight, Phone } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Phone, MapPin } from "lucide-react";
 import { site } from "@/config/site";
-import { Reveal } from "./Reveal";
+import { trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
 
-export function FinalCTA() {
+export function FinalCTA({
+  heading = "Ready to protect or transform your vehicle?",
+  body = "Tell us what you drive and what's bothering you. You'll get a straight recommendation and a flat price — no pressure, no upsell to film you don't need.",
+  location = "final-cta",
+  service,
+}: {
+  heading?: string;
+  body?: string;
+  location?: string;
+  service?: string;
+}) {
   return (
-    <section className="py-24 sm:py-32">
-      <div className="container-x">
-        <Reveal className="relative overflow-hidden rounded-3xl hairline p-10 sm:p-20 text-center noise">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-surface via-background to-surface" />
-          <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-[500px] w-[500px] glow-orb" />
-
-          <div className="text-xs uppercase tracking-[0.24em] text-accent">Ready When You Are</div>
-          <h2 className="mt-6 text-4xl sm:text-6xl lg:text-7xl text-balance max-w-4xl mx-auto leading-[1.05]">
-            Ready to <span className="ember-text italic">upgrade</span> your vehicle?
-          </h2>
-          <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">
-            Get your free tint quote today — no obligation, no pressure. Just great
-            work at a fair price.
+    <section className="border-t border-border bg-surface/40">
+      <div className="container-x section-y">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2>{heading}</h2>
+          <p className="mx-auto mt-4 max-w-xl text-[1.0625rem] leading-relaxed text-muted-foreground">
+            {body}
           </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="#quote"
-              className="group inline-flex items-center gap-2 rounded-full bg-accent px-7 py-4 text-sm font-medium text-accent-foreground shadow-glow hover:brightness-110 transition-all"
+
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              to="/quote"
+              onClick={() => trackQuoteClick(location, service)}
+              className="btn btn-primary btn-lg"
             >
               Get My Free Quote
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </a>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
             <a
               href={site.business.phoneHref}
-              className="inline-flex items-center gap-2 rounded-full hairline bg-background/50 px-7 py-4 text-sm font-medium text-foreground hover:bg-surface-elevated transition-colors"
+              onClick={() => trackPhoneClick(location)}
+              className="btn btn-ghost btn-lg"
             >
               <Phone className="h-4 w-4" />
               {site.business.phone}
             </a>
           </div>
-        </Reveal>
+
+          <p className="mt-7 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 text-accent" />
+            {site.business.address}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Mon–Sat, 10:00 AM – 6:00 PM</p>
+        </div>
       </div>
     </section>
   );

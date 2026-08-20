@@ -1,96 +1,115 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, Phone, Star, ShieldCheck, Sparkles, Wrench } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Star } from "lucide-react";
 import { site } from "@/config/site";
-import { fetchSiteImages } from "@/lib/shopGallery";
+import { images } from "@/config/images";
+import { useWideSiteImage } from "@/lib/shopGallery";
+import { trackQuoteClick } from "@/lib/analytics";
 
-const badges = [
-  { icon: Star, label: "5.0★ Google Reviews" },
-  { icon: ShieldCheck, label: "Lifetime Warranty" },
-  { icon: Sparkles, label: "Premium Films" },
-  { icon: Wrench, label: "Certified Install" },
-];
-
-// Shown immediately; swapped for the owner's uploaded hero (ShopFlow → Settings
-// → Website Photos) once the API responds.
-const HERO_FALLBACK =
-  "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2400&q=85";
-
+/**
+ * Homepage hero.
+ *
+ * The image is a real customer car in Evo's own bay, bundled locally and
+ * rendered server-side so it's the LCP element rather than something that
+ * appears after a client fetch. If Angelo sets a hero in ShopFlow it takes
+ * over once the API responds.
+ */
 export function Hero() {
-  const [heroSrc, setHeroSrc] = useState(HERO_FALLBACK);
-
-  useEffect(() => {
-    fetchSiteImages().then((imgs) => {
-      if (imgs.hero) setHeroSrc(imgs.hero);
-    });
-  }, []);
+  const heroSrc = useWideSiteImage("hero", images.hero.webp);
+  const isBundled = heroSrc === images.hero.webp;
 
   return (
-    <section id="top" className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-32 noise">
-      {/* Background image */}
+    <section className="relative isolate flex min-h-[38rem] items-end overflow-hidden pt-[4.5rem] lg:min-h-[86vh]">
       <div className="absolute inset-0 -z-10">
-        <img
-          src={heroSrc}
-          alt=""
-          className="h-full w-full object-cover object-center opacity-25"
-          width={2400}
-          height={1600}
-          fetchPriority="high"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/85 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/20" />
+        {/*
+          LCP element. The bundled photo ships as AVIF with a WebP fallback and
+          a responsive srcset; an owner upload from ShopFlow is a single JPEG,
+          so it renders plainly rather than inheriting the wrong descriptors.
+          Explicit width/height reserve the box either way.
+        */}
+        {isBundled ? (
+          <picture>
+            <source type="image/avif" srcSet={images.hero.avifSrcSet} sizes={images.hero.sizes} />
+            <source type="image/webp" srcSet={images.hero.webpSrcSet} sizes={images.hero.sizes} />
+            <img
+              src={heroSrc}
+              alt={images.hero.alt}
+              width={images.hero.width}
+              height={images.hero.height}
+              fetchPriority="high"
+              decoding="sync"
+              className="h-full w-full object-cover object-center"
+            />
+          </picture>
+        ) : (
+          <img
+            src={heroSrc}
+            alt={images.hero.alt}
+            width={images.hero.width}
+            height={images.hero.height}
+            fetchPriority="high"
+            decoding="sync"
+            className="h-full w-full object-cover object-center"
+          />
+        )}
+        {/* Two scrims: vertical for the copy block, horizontal so the left
+            edge stays dark enough for text on wide screens. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/35 to-transparent" />
+        {/* Protects nav contrast regardless of how light the photo's sky is. */}
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/80 to-transparent" />
       </div>
 
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute top-1/3 left-1/4 -z-10 h-[500px] w-[500px] glow-orb" />
+      <div className="container-x relative w-full pb-14 pt-24 sm:pb-20 lg:pb-24">
+        <div className="max-w-2xl">
+          <p className="eyebrow hero-step-1">Albuquerque, New Mexico</p>
 
-      <div className="container-x relative">
-        <div className="max-w-3xl animate-fade-up">
-          <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            {site.business.tagline}
-          </div>
-
-          <h1 className="mt-6 text-balance text-4xl sm:text-6xl lg:text-7xl leading-[1.05]">
-            Premium window tint that keeps your vehicle{" "}
-            <span className="ember-text italic">cooler, protected, </span>
-            and looking better.
+          <h1 className="hero-step-1 mt-4">
+            Window tint and paint protection,
+            <span className="text-accent"> done properly.</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-pretty text-base sm:text-lg text-muted-foreground leading-relaxed">
-            Professional installation using premium ceramic films engineered for maximum
-            heat rejection, UV protection, privacy, and unmistakable style.
+          <p className="hero-step-2 mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
+            An Albuquerque shop doing tint, paint protection film, ceramic coating and detailing —
+            on daily drivers, and on the cars people don't hand over lightly.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a
-              href="#quote"
-              className="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-foreground shadow-glow hover:brightness-110 transition-all"
+          <p className="hero-step-2 mt-5 font-display text-sm font-semibold uppercase tracking-[0.14em] text-foreground/85">
+            Window Tint <span className="text-faint-foreground">·</span> Ceramic Coating{" "}
+            <span className="text-faint-foreground">·</span> PPF{" "}
+            <span className="text-faint-foreground">·</span> Detailing
+          </p>
+
+          <div className="hero-step-3 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              to="/quote"
+              onClick={() => trackQuoteClick("hero")}
+              className="btn btn-primary btn-lg"
             >
-              Get My Free Tint Quote
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </a>
-            <a
-              href={site.business.phoneHref}
-              className="inline-flex items-center gap-2 rounded-full hairline px-6 py-3.5 text-sm font-medium text-foreground hover:bg-surface-elevated transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              Call Now
-            </a>
+              Get My Free Quote
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link to="/gallery" className="btn btn-ghost btn-lg">
+              View Our Work
+            </Link>
           </div>
 
-          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3">
-            {badges.map((b) => (
-              <div key={b.label} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <b.icon className="h-4 w-4 text-accent" />
-                {b.label}
-              </div>
-            ))}
+          <div className="hero-step-4 mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="flex" aria-hidden>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
+                ))}
+              </span>
+              <span className="text-foreground">{site.reviews.rating.toFixed(1)}</span>
+              on Google ({site.reviews.count} reviews)
+            </span>
+            <span className="hidden h-3 w-px bg-border sm:block" />
+            <span>Locally owned on Vista Alameda</span>
+            <span className="hidden h-3 w-px bg-border sm:block" />
+            <span>Walk-ins welcome</span>
           </div>
         </div>
       </div>
-
-      {/* Bottom fade */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 }
