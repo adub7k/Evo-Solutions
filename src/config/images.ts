@@ -55,14 +55,14 @@ export const images = {
       webp: "/img/paint-protection-film-albuquerque.webp",
       width: 900,
       height: 507,
-      alt: "Technician working along the front fender of a green Mercedes-AMG GLE 63",
+      alt: "Three Evo Solutions technicians working on the hood of a gold Cadillac CT4-V",
     },
     service_detail: {
       avif: "/img/auto-detailing-albuquerque.avif",
       webp: "/img/auto-detailing-albuquerque.webp",
       width: 900,
       height: 507,
-      alt: "Three Evo Solutions technicians working on the hood of a gold Cadillac CT4-V",
+      alt: "Technician working along the front fender of a green Mercedes-AMG GLE 63",
     },
     service_commercial: {
       avif: "/img/commercial-window-tint-albuquerque.avif",

@@ -24,6 +24,29 @@ export const isValidYear = (v: string) => {
 
 const UTM_KEY = "sf_attribution";
 
+type Attribution = {
+  utm: Record<string, string>;
+  referrer: string;
+  landing?: string;
+  /** Platform click IDs — fbclid (Meta) / gclid (Google). */
+  click?: Record<string, string>;
+};
+
+/**
+ * Ad platforms append their own click ID whether or not the campaign was built
+ * with UTMs, and Meta campaigns very often ship without them. Rather than let
+ * those leads land in the CRM as plain "website", a click ID stands in as the
+ * source when no utm_source was passed — so an ad lead is still labelled
+ * facebook / paid-social in ShopFlow, and the raw ID goes in the notes so a
+ * booked job can be matched back to a click in Ads Manager.
+ *
+ * An explicit utm_source always wins: it is what whoever built the ad asked for.
+ */
+const CLICK_IDS: { param: string; source: string; medium: string }[] = [
+  { param: "fbclid", source: "facebook", medium: "paid-social" },
+  { param: "gclid", source: "google", medium: "cpc" },
+];
+
 export function captureAttribution() {
   try {
     if (sessionStorage.getItem(UTM_KEY)) return;
@@ -33,19 +56,34 @@ export function captureAttribution() {
       const v = p.get(`utm_${k}`);
       if (v) utm[k] = v;
     }
-    sessionStorage.setItem(
-      UTM_KEY,
-      JSON.stringify({ utm, referrer: document.referrer || "", landing: window.location.pathname }),
-    );
+
+    const click: Record<string, string> = {};
+    for (const c of CLICK_IDS) {
+      const v = p.get(c.param);
+      if (!v) continue;
+      click[c.param] = v;
+      if (!utm.source) {
+        utm.source = c.source;
+        if (!utm.medium) utm.medium = c.medium;
+      }
+    }
+
+    const payload: Attribution = {
+      utm,
+      referrer: document.referrer || "",
+      landing: window.location.pathname,
+      click,
+    };
+    sessionStorage.setItem(UTM_KEY, JSON.stringify(payload));
   } catch {
     /* sessionStorage unavailable (private mode) — attribution is best-effort */
   }
 }
 
-function getAttribution(): { utm: Record<string, string>; referrer: string } {
+function getAttribution(): Attribution {
   try {
     const raw = sessionStorage.getItem(UTM_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return JSON.parse(raw) as Attribution;
   } catch {
     /* fall through */
   }
@@ -90,7 +128,10 @@ export type LeadInput = {
 };
 
 export async function submitLead(input: LeadInput): Promise<{ ok: boolean; error?: string }> {
-  const { utm, referrer } = getAttribution();
+  const { utm, referrer, click, landing } = getAttribution();
+  const clickIds = Object.entries(click ?? {})
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ");
 
   // The structured request lives in notes so it survives any tenant's
   // lead-form option list (the server drops `services` labels it doesn't know).
@@ -104,6 +145,9 @@ export async function submitLead(input: LeadInput): Promise<{ ok: boolean; error
       `Requested appointment: ${input.appointment.date} at ${input.appointment.time}`,
     input.photoUrls?.length && `Photos: ${input.photoUrls.join(" ")}`,
     input.notes && `Customer note: ${input.notes}`,
+    // Ad trail, last so it never pushes the customer's own words out of view.
+    landing && landing !== "/" && `Landing page: ${landing}`,
+    clickIds && `Ad click: ${clickIds}`,
   ].filter(Boolean);
 
   try {

@@ -80,6 +80,29 @@ export const site = {
    */
   filmBrands: ["HiTek", "Impressive Films"],
 
+  /**
+   * Tint performance + warranty — SUPPLIED BY THE OWNER 2026-08-26 for the
+   * paid-traffic landing page (/tint).
+   *
+   * These are the only performance numbers published anywhere on this site,
+   * and they are published because the shop stands behind them, not because a
+   * copywriter liked them. They must keep matching what HiTek / Impressive
+   * Films spec on the film actually being installed — a percentage on an ad
+   * landing page is precisely what an FTC or competitor complaint goes after.
+   * Re-confirm at each launch (VERIFY.md).
+   *
+   * `heat` is total solar energy rejected. UV is quoted as "99%+" the way the
+   * industry does, because that's the manufacturer figure for both tiers.
+   */
+  tintSpecs: {
+    sourcedFrom: "Owner (Angelo)",
+    sourcedOn: "2026-08-26",
+    carbon: { uv: 99, heat: 20 },
+    ceramic: { uv: 99, heat: 65 },
+    /** Covers bubbling, peeling, cracking, delamination and colour change. */
+    warranty: "Lifetime warranty on the film",
+  },
+
   serviceArea: {
     primary: "Albuquerque, New Mexico",
     /** Confirmed by Angelo as within normal travel for commercial work. */
@@ -102,15 +125,16 @@ export const site = {
    * Flip a value into the published config above only with a source.
    */
   unverified: {
-    /** Site promised a "transferable lifetime manufacturer warranty" on every
-     *  install and a "10-year" PPF warranty. No warranty document seen. */
-    warranty: { tint: null, ppf: null, coating: null },
+    /** Tint warranty is now owner-confirmed and published in `tintSpecs`.
+     *  PPF ("10-year") and coating warranties are still unsourced. */
+    warranty: { ppf: null, coating: null },
     /** Site claimed "certified installers" / "factory-trained". */
     certifications: null,
     /** Site claimed a "climate-controlled, dust-free bay". */
     facilityClaims: null,
-    /** Site published "96% / 88% / 62%" heat-rejection and "99% UV" figures
-     *  with no film spec sheet behind them. */
+    /** The old invented "96% / 88% / 62%" figures are gone. Owner-confirmed
+     *  carbon/ceramic numbers now live in `tintSpecs` above and are the only
+     *  performance claims this site makes. */
     heatRejectionFigures: null,
     /** Site advertised tint at $249/$299/$399/$549 — invented, and ~30% under
      *  Angelo's real prices. Pricing is now read LIVE from ShopFlow → Settings
@@ -134,8 +158,9 @@ export const trustSignals: TrustSignal[] = [
   { id: "local", value: "Albuquerque", label: "Locally owned & operated", verified: true },
   { id: "services", value: "Tint · PPF · Coating", label: "All done in-house", verified: true },
   { id: "walkins", value: "Walk-ins", label: "Welcome Mon–Sat", verified: true },
+  // Owner-confirmed 2026-08-26 alongside the tint specs above.
+  { id: "warranty", value: "Lifetime", label: "Warranty on the film", verified: true },
   // --- held back pending verification (see VERIFY.md) ---
-  { id: "warranty", value: "Lifetime", label: "Film warranty", verified: false },
   { id: "certified", value: "Certified", label: "Factory-trained installers", verified: false },
 ];
 

@@ -20,11 +20,16 @@ const GA4_MEASUREMENT_ID = "G-0KB9XP0PFV";
 /** The marketing partner's Google Ads account (conversions + remarketing). */
 const GOOGLE_ADS_ID = "AW-17888381819";
 /**
- * Meta Pixel. Empty until Angelo's agency supplies an ID — see VERIFY.md.
- * When set, the pixel loads alongside gtag and lib/analytics.ts starts
- * emitting Lead / InitiateCheckout events with no other changes needed.
+ * Meta Pixel.
+ *
+ * Set VITE_META_PIXEL_ID at build time (Railway → Variables) with the pixel ID
+ * from the ad account that will run the traffic — that is the whole job of
+ * "connecting" the site to a Meta account. When it's set the pixel loads
+ * alongside gtag and lib/analytics.ts starts emitting PageView / ViewContent /
+ * InitiateCheckout / Lead with no other changes needed. Empty = off, and every
+ * fbq call in the app is a silent no-op.
  */
-const META_PIXEL_ID = "";
+const META_PIXEL_ID = (import.meta.env.VITE_META_PIXEL_ID as string | undefined) ?? "";
 
 const gtagInit = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('js',new Date());
@@ -226,6 +231,15 @@ export const Route = createRootRoute({
        */
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      /*
+       * Google wants a square multiple of 48px and prefers a declared PNG
+       * over digging a frame out of the .ico (which does carry a 48). These
+       * are declared explicitly so the crawler has an unambiguous, correctly
+       * sized source and no reason to fall back to a generated letter tile.
+       */
+      { rel: "icon", href: "/favicon-48.png", type: "image/png", sizes: "48x48" },
+      { rel: "icon", href: "/favicon-96.png", type: "image/png", sizes: "96x96" },
+      { rel: "icon", href: "/favicon-192.png", type: "image/png", sizes: "192x192" },
       { rel: "icon", href: "/img/evo-solutions-mark-512.png", type: "image/png", sizes: "512x512" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

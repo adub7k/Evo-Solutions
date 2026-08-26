@@ -20,12 +20,12 @@ rendered anywhere.
 
 | Claim that was live                                                           | Why it was pulled                                                                                                                               | What we need                                                                                                 |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| "Lifetime, transferable manufacturer warranty" on every install               | No warranty document seen                                                                                                                       | The actual film warranty terms — brand, length, what's covered, transferable or not                          |
+| "Lifetime, transferable manufacturer warranty" on every install               | **PARTLY RESOLVED 2026-08-26.** You confirmed a lifetime warranty on tint film; it is now published on `/tint` as "lifetime warranty on the film" covering bubbling, peeling, cracking and colour change. **Transferable** is still NOT claimed anywhere | The written warranty terms, so we can say whether it transfers to a new owner and what voids it |
 | "10-year warranty against yellowing and cracking" on PPF                      | Same                                                                                                                                            | The PPF manufacturer's warranty document                                                                     |
 | "Certified installers", "factory-trained"                                     | No certification seen                                                                                                                           | Which certifications, from whom, and are they current                                                        |
 | "Climate-controlled, dust-free bay"                                           | Couldn't verify                                                                                                                                 | Is the install bay climate controlled?                                                                       |
 | Film brands: **XPEL, 3M, SunTek, LLumar, Solar Gard, Rayno**                  | Your own shop photos show an **Impressive Films** retailer banner and a **HiTek** branded install post — none of the six listed                 | Which brands are you actually an authorised installer for? This is a real trust asset and worth putting back |
-| "Reject up to **96%** of infrared heat", "88%", "62%", "blocks **99%** of UV" | No film spec sheet behind the numbers                                                                                                           | The spec sheet for the films you stock. Then we can quote real figures per film                              |
+| "Reject up to **96%** of infrared heat", "88%", "62%", "blocks **99%** of UV" | Invented figures are gone. **You supplied real ones 2026-08-26** — carbon 99% UV / 20% heat, ceramic 99% UV / 65% heat — now in `site.tintSpecs` and published on `/tint` only | The HiTek / Impressive Films spec sheet, so these are backed by a document and not just memory. Re-check at each launch |
 | Tint priced **$249 / $299 / $399 / $549**                                     | Contradicts your real ShopFlow prices (carbon $425, ceramic $560) by ~30% — it was underquoting you to anyone who read the page and then called | Nothing: the site is now quote-only by your decision. Flagged so you know it was there                       |
 | "2–3 hours for a sedan", "same-day", "most vehicles complete same-day"        | Never sourced                                                                                                                                   | Realistic turnaround per service, if you want them published                                                 |
 | "Thousands of installs" (in a blog post)                                      | Not verifiable                                                                                                                                  | A number you're comfortable standing behind, or leave it out                                                 |
@@ -150,10 +150,17 @@ ShopFlow → Settings → Meet the Team and they appear without a deploy.
 
 - **Google Analytics 4** (`G-0KB9XP0PFV`) — live.
 - **Google Ads** (`AW-17888381819`) — live, conversion fires on quote submit.
-- **Meta Pixel — NOT configured.** `META_PIXEL_ID` in
-  `src/routes/__root.tsx` is empty. The moment you paste an ID in, the pixel
-  loads and Lead / InitiateCheckout events start firing; no other change needed.
-  Required before you run Meta ads.
+- **Meta Pixel — NOT configured, but now one variable away.** Set
+  `VITE_META_PIXEL_ID` in Railway to the pixel ID of the ad account that will
+  run the traffic and redeploy. The pixel then loads on every page and fires
+  PageView, ViewContent (on `/tint`), InitiateCheckout and Lead with no code
+  change. Required before you run Meta ads.
+- **`/tint` — the paid-social landing page.** Point Meta ads at
+  `https://www.evosolution.org/tint`. It's `noindex` on purpose so it can't
+  compete with `/window-tint` in search. Leads post to the same ShopFlow
+  endpoint as every other form; if Meta strips your UTMs, the `fbclid` on the
+  URL is enough for the lead to land in ShopFlow tagged `facebook` /
+  `paid-social`, with the raw click ID in the lead notes.
 - **Google Search Console** — verify the domain and submit
   `https://www.evosolution.org/sitemap.xml` after this deploys.
 

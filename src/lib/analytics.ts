@@ -97,6 +97,17 @@ export function trackQuoteError(reason: string): void {
   gtagEvent("quote_error", { reason });
 }
 
+/**
+ * A paid-traffic landing page was viewed. Meta optimises delivery on the
+ * events it sees, so the ad-landing pages report ViewContent on arrival and
+ * Lead on submit — the two ends of the funnel Ads Manager needs to learn from.
+ * The generic site PageView still fires from the pixel snippet in __root.
+ */
+export function trackLandingView(service: string): void {
+  gtagEvent("landing_view", { service });
+  fbqEvent("ViewContent", { content_category: service, content_name: service });
+}
+
 /* -------------------------------------------------------------- content -- */
 
 export function trackGalleryFilter(filter: string): void {

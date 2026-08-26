@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WindowTintRouteImport } from './routes/window-tint'
 import { Route as TintLawsNewMexicoRouteImport } from './routes/tint-laws-new-mexico'
+import { Route as TintRouteImport } from './routes/tint'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as PaintProtectionFilmRouteImport } from './routes/paint-protection-film'
@@ -32,6 +33,11 @@ const WindowTintRoute = WindowTintRouteImport.update({
 const TintLawsNewMexicoRoute = TintLawsNewMexicoRouteImport.update({
   id: '/tint-laws-new-mexico',
   path: '/tint-laws-new-mexico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TintRoute = TintRouteImport.update({
+  id: '/tint',
+  path: '/tint',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewsRoute = ReviewsRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/quote': typeof QuoteRoute
   '/reviews': typeof ReviewsRoute
+  '/tint': typeof TintRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
   '/window-tint': typeof WindowTintRoute
   '/guides/$slug': typeof GuidesSlugRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/quote': typeof QuoteRoute
   '/reviews': typeof ReviewsRoute
+  '/tint': typeof TintRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
   '/window-tint': typeof WindowTintRoute
   '/guides/$slug': typeof GuidesSlugRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/quote': typeof QuoteRoute
   '/reviews': typeof ReviewsRoute
+  '/tint': typeof TintRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
   '/window-tint': typeof WindowTintRoute
   '/guides/$slug': typeof GuidesSlugRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/paint-protection-film'
     | '/quote'
     | '/reviews'
+    | '/tint'
     | '/tint-laws-new-mexico'
     | '/window-tint'
     | '/guides/$slug'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/paint-protection-film'
     | '/quote'
     | '/reviews'
+    | '/tint'
     | '/tint-laws-new-mexico'
     | '/window-tint'
     | '/guides/$slug'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/paint-protection-film'
     | '/quote'
     | '/reviews'
+    | '/tint'
     | '/tint-laws-new-mexico'
     | '/window-tint'
     | '/guides/$slug'
@@ -206,6 +218,7 @@ export interface RootRouteChildren {
   PaintProtectionFilmRoute: typeof PaintProtectionFilmRoute
   QuoteRoute: typeof QuoteRoute
   ReviewsRoute: typeof ReviewsRoute
+  TintRoute: typeof TintRoute
   TintLawsNewMexicoRoute: typeof TintLawsNewMexicoRoute
   WindowTintRoute: typeof WindowTintRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/tint-laws-new-mexico'
       fullPath: '/tint-laws-new-mexico'
       preLoaderRoute: typeof TintLawsNewMexicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tint': {
+      id: '/tint'
+      path: '/tint'
+      fullPath: '/tint'
+      preLoaderRoute: typeof TintRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reviews': {
@@ -326,6 +346,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaintProtectionFilmRoute: PaintProtectionFilmRoute,
   QuoteRoute: QuoteRoute,
   ReviewsRoute: ReviewsRoute,
+  TintRoute: TintRoute,
   TintLawsNewMexicoRoute: TintLawsNewMexicoRoute,
   WindowTintRoute: WindowTintRoute,
   GuidesSlugRoute: GuidesSlugRoute,
