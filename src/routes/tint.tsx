@@ -40,6 +40,18 @@ const DESC =
 const TINT = serviceBySlug("window-tint");
 const specs = site.tintSpecs;
 
+/**
+ * Share card for this page only.
+ *
+ * The sitewide card (`images.share`) is the blue 911 in the bay — a detailing
+ * photo, which is the wrong promise on a tint page and on any link to it that
+ * gets texted or posted. This one is Angelo's own windshield install, cropped
+ * to 1200x630 from the shop's gallery.
+ */
+const SHARE_IMAGE = `${site.url}/img/window-tint-windshield-share.jpg`;
+const SHARE_ALT =
+  "Evo Solutions installer working window film across the inside of a front windshield";
+
 export const Route = createFileRoute("/tint")({
   head: () => ({
     ...seoNoIndex(),
@@ -59,6 +71,13 @@ function seoNoIndex() {
       { property: "og:description", content: DESC },
       { property: "og:url", content: `${site.url}${PATH}` },
       { property: "og:site_name", content: site.business.name },
+      // Overrides the sitewide card in __root.tsx — deepest route wins.
+      { property: "og:image", content: SHARE_IMAGE },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: SHARE_ALT },
+      { name: "twitter:image", content: SHARE_IMAGE },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: `${site.url}${PATH}` }],
   };
