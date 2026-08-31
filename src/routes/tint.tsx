@@ -16,6 +16,7 @@ import {
   tintTierRange,
   usePricing,
   type Pricing,
+  type TintTier,
 } from "@/lib/pricing";
 import { useShopGallery, useSiteImage } from "@/lib/shopGallery";
 import { useScrolledPast } from "@/lib/useScrolledPast";
@@ -95,6 +96,15 @@ function TintLanding() {
   // Every price element below renders nothing when this is null.
   const pricing = usePricing();
 
+  // Google's ceramic ads land on /tint#ceramic: the browser scrolls to the
+  // comparison and both forms preselect ceramic, so the page answers the
+  // exact query the click came from. Read post-mount — hashes don't reach
+  // the server, and the SSR HTML must match the first client render.
+  const [presetTier, setPresetTier] = useState<TintTier | null>(null);
+  useEffect(() => {
+    if (window.location.hash.toLowerCase() === "#ceramic") setPresetTier("ceramic");
+  }, []);
+
   useEffect(() => {
     trackLandingView("Window tint");
   }, []);
@@ -103,14 +113,14 @@ function TintLanding() {
     <div className="relative min-h-screen bg-background text-foreground">
       <LandingHeader />
       <main id="main" className="pb-24 lg:pb-0">
-        <HeroWithForm pricing={pricing} />
+        <HeroWithForm pricing={pricing} presetTier={presetTier} />
         <TheCost />
         <TheOffer />
         <CarbonVsCeramic pricing={pricing} />
         <Guarantee />
         <Proof />
         <Objections />
-        <Close />
+        <Close presetTier={presetTier} />
       </main>
       <StickyBar />
     </div>
@@ -158,7 +168,13 @@ function LandingHeader() {
 
 /* ================================================================== hero == */
 
-function HeroWithForm({ pricing }: { pricing: Pricing | null }) {
+function HeroWithForm({
+  pricing,
+  presetTier,
+}: {
+  pricing: Pricing | null;
+  presetTier: TintTier | null;
+}) {
   const heroSrc = useSiteImage("service_tint", images.service.service_tint.webp);
   const isBundled = heroSrc === images.service.service_tint.webp;
   const fromPrice = startingAt(pricing, "window-tint");
@@ -301,7 +317,7 @@ function HeroWithForm({ pricing }: { pricing: Pricing | null }) {
             scroll to find the thing the ad promised. On mobile it follows
             immediately, which tests better than a form buried below proof. */}
         <div className="lg:pt-6">
-          <LandingLeadForm />
+          <LandingLeadForm presetTier={presetTier} />
         </div>
       </div>
     </section>
@@ -462,11 +478,16 @@ function CarbonVsCeramic({ pricing }: { pricing: Pricing | null }) {
   ];
 
   return (
-    <section className="section-y-tight cv-auto border-t border-border">
+    // Anchored so ceramic-keyword ads can land on /tint#ceramic and arrive at
+    // a section that names their exact search. scroll-mt clears the sticky
+    // header when the browser jumps here.
+    <section id="ceramic" className="section-y-tight cv-auto scroll-mt-20 border-t border-border">
       <div className="container-x">
         <Reveal>
           <p className="eyebrow">Two tiers, one honest difference</p>
-          <h2 className="mt-3 max-w-3xl">Both look the same from the street.</h2>
+          <h2 className="mt-3 max-w-3xl">
+            Ceramic tint vs. carbon — both look the same from the street.
+          </h2>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             A 20% carbon and a 20% ceramic are the same shade to anyone looking at your car. The
             difference is what happens inside it in August — {specs.carbon.heat}% of the sun's heat
@@ -753,7 +774,7 @@ function Objections() {
 
 /* ================================================================= close == */
 
-function Close() {
+function Close({ presetTier }: { presetTier: TintTier | null }) {
   return (
     <section className="section-y-tight cv-auto border-t border-border">
       <div className="container-x">
@@ -798,7 +819,7 @@ function Close() {
             {/* A second live form rather than a link back up the page — on a
                 long page, scrolling someone 4,000px to a form they already
                 passed is where leads die. Both post to the same place. */}
-            <LandingLeadForm id="quote-close" />
+            <LandingLeadForm id="quote-close" presetTier={presetTier} />
           </Reveal>
         </div>
 
