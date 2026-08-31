@@ -17,6 +17,7 @@ import {
   trackQuoteError,
   trackQuoteStart,
 } from "@/lib/analytics";
+import { money, tintTierRange, usePricing, type TintTier } from "@/lib/pricing";
 
 /**
  * The paid-social lead form.
@@ -59,6 +60,18 @@ const TIERS = [
   "Not sure — recommend one",
 ] as const;
 
+/**
+ * Success-screen estimate lookup.
+ *
+ * Both axes stay owner-edited in ShopFlow: the vehicle axis is ShopFlow's own
+ * per-size pricing and the film-tier axis is the TINT_TIER_MATCH matcher map
+ * in lib/pricing.ts. This maps a tier chip to that axis — edit there, not here.
+ * No pricing data (API down) → no estimate block; the callback promise stands
+ * on its own, and a missing estimate is fine where a wrong one is not.
+ */
+const chipTier = (chip: string): TintTier | null =>
+  chip.startsWith("Ceramic") ? "ceramic" : chip.startsWith("Carbon") ? "carbon" : null;
+
 /** Trimmed from the tint page's goal list — four reads faster than six. */
 const GOALS = [
   "Heat — the car bakes",
@@ -98,11 +111,23 @@ type Errors = Partial<
   Record<"name" | "phone" | "email" | "year" | "make" | "model" | "color", string>
 >;
 
-export function LandingLeadForm({ id = "quote" }: { id?: string }) {
+export function LandingLeadForm({
+  id = "quote",
+  presetTier = null,
+  phone,
+}: {
+  id?: string;
+  /** Preselects a film tier (e.g. /tint#ceramic ad traffic). */
+  presetTier?: TintTier | null;
+  /** Channel-specific display number; defaults to the shop's own. */
+  phone?: { display: string; href: string };
+}) {
   // The page renders this form twice (hero + close). Element ids are scoped to
   // the instance so labels, aria-describedby and the honeypot stay unique —
   // duplicate ids silently break label-click and screen-reader association.
   const fid = (suffix: string) => `${id}-${suffix}`;
+  const shopPhone = phone ?? { display: site.business.phone, href: site.business.phoneHref };
+  const pricing = usePricing();
   const [data, setData] = useState<Data>(initial);
   const [errors, setErrors] = useState<Errors>({});
   const [sending, setSending] = useState(false);
@@ -119,6 +144,14 @@ export function LandingLeadForm({ id = "quote" }: { id?: string }) {
   useEffect(() => {
     captureAttribution();
   }, []);
+
+  // Ad-driven preselect (#ceramic). Applied via setData, not set(), so it
+  // neither fires quote_start nor overrides a tier the visitor already chose.
+  useEffect(() => {
+    if (!presetTier || startedRef.current) return;
+    const chip = TIERS.find((t) => t.toLowerCase().startsWith(presetTier));
+    if (chip) setData((d) => ({ ...d, tier: chip }));
+  }, [presetTier]);
 
   const set = <K extends keyof Data>(k: K, v: Data[K]) => {
     if (!startedRef.current) {
@@ -196,6 +229,13 @@ export function LandingLeadForm({ id = "quote" }: { id?: string }) {
 
   /* ------------------------------------------------------------ success -- */
   if (submitted) {
+    // The CTA said "Get My Tint Price", so the success screen shows one — a
+    // live full-vehicle range for the chosen tier (both tiers when unsure),
+    // clearly an estimate until the shop confirms the flat number by text.
+    const tier = chipTier(data.tier);
+    const range = tintTierRange(pricing, tier);
+    const tierLabel = tier ?? "carbon or ceramic";
+
     return (
       <div
         id={id}
@@ -213,17 +253,31 @@ export function LandingLeadForm({ id = "quote" }: { id?: string }) {
           <h2 className="mt-6 font-display text-[clamp(1.6rem,4vw,2.1rem)]">
             Got it, {data.name.trim().split(" ")[0]}.
           </h2>
-          <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
-            We'll come back with a shade recommendation and a flat price for your {data.year}{" "}
-            {data.make} {data.model} — usually the same day during shop hours.
+
+          {range && (
+            <div className="mx-auto mt-6 max-w-sm rounded-lg border border-border bg-surface-2 p-5">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Estimated price — full vehicle, {tierLabel}
+              </p>
+              <p className="mt-1.5 font-display text-3xl font-bold tracking-tight text-accent">
+                {range.min === range.max
+                  ? money(range.min)
+                  : `${money(range.min)}–${money(range.max)}`}
+              </p>
+              <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
+                Estimate only, pending final confirmation — where your {data.make} {data.model}{" "}
+                lands depends on its size and glass.
+              </p>
+            </div>
+          )}
+
+          <p className="mx-auto mt-5 max-w-sm text-muted-foreground">
+            We'll text your exact flat price for the {data.year} {data.make} {data.model} — usually
+            the same day during shop hours.
           </p>
-          <a
-            href={site.business.phoneHref}
-            className="btn btn-primary btn-lg mt-7"
-            data-cta="success-call"
-          >
+          <a href={shopPhone.href} className="btn btn-primary btn-lg mt-6" data-cta="success-call">
             <Phone className="h-4 w-4" />
-            Or call {site.business.phone}
+            Call now to book — {shopPhone.display}
           </a>
           <p className="mt-5 text-sm text-muted-foreground">
             {site.business.address.split(",")[0]} · Mon–Sat 10–6 · Walk-ins welcome
@@ -369,11 +423,11 @@ export function LandingLeadForm({ id = "quote" }: { id?: string }) {
           <div>
             <p>{submitError}</p>
             <a
-              href={site.business.phoneHref}
+              href={shopPhone.href}
               className="mt-2 inline-flex items-center gap-1.5 font-medium text-accent"
             >
               <Phone className="h-3.5 w-3.5" />
-              {site.business.phone}
+              {shopPhone.display}
             </a>
           </div>
         </div>
