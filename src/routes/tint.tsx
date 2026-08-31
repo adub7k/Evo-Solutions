@@ -10,6 +10,13 @@ import { site } from "@/config/site";
 import { reviews } from "@/content/reviews";
 import { serviceBySlug } from "@/content/services";
 import { trackLandingView, trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
+import {
+  money,
+  startingAt,
+  tintTierRange,
+  usePricing,
+  type Pricing,
+} from "@/lib/pricing";
 import { useShopGallery, useSiteImage } from "@/lib/shopGallery";
 import { useScrolledPast } from "@/lib/useScrolledPast";
 
@@ -84,6 +91,10 @@ function seoNoIndex() {
 }
 
 function TintLanding() {
+  // Live prices from ShopFlow — the only price source this repo allows.
+  // Every price element below renders nothing when this is null.
+  const pricing = usePricing();
+
   useEffect(() => {
     trackLandingView("Window tint");
   }, []);
@@ -92,10 +103,10 @@ function TintLanding() {
     <div className="relative min-h-screen bg-background text-foreground">
       <LandingHeader />
       <main id="main" className="pb-24 lg:pb-0">
-        <HeroWithForm />
+        <HeroWithForm pricing={pricing} />
         <TheCost />
         <TheOffer />
-        <CarbonVsCeramic />
+        <CarbonVsCeramic pricing={pricing} />
         <Guarantee />
         <Proof />
         <Objections />
@@ -147,9 +158,10 @@ function LandingHeader() {
 
 /* ================================================================== hero == */
 
-function HeroWithForm() {
+function HeroWithForm({ pricing }: { pricing: Pricing | null }) {
   const heroSrc = useSiteImage("service_tint", images.service.service_tint.webp);
   const isBundled = heroSrc === images.service.service_tint.webp;
+  const fromPrice = startingAt(pricing, "window-tint");
 
   return (
     <section className="relative isolate overflow-hidden">
@@ -205,6 +217,21 @@ function HeroWithForm() {
             <br />
             Cut up to <span className="text-accent">65% of the heat.</span>
           </h1>
+
+          {/* The live from-price. Price shoppers are the biggest source of
+              wasted paid clicks: hiding the floor means paying ~$5 for people
+              who were never going to spend $400+. A starting point, not a
+              quote — the flat number still comes by text. */}
+          {fromPrice != null && (
+            <p className="mt-4 text-[0.9375rem]">
+              <span className="font-display font-semibold text-accent">
+                Full vehicle from {money(fromPrice)}
+              </span>{" "}
+              <span className="text-muted-foreground">
+                — exact flat price for your car by text
+              </span>
+            </p>
+          )}
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
             Ceramic and carbon film, installed at our shop on Vista Alameda and backed by a{" "}
@@ -408,7 +435,10 @@ function TheOffer() {
 
 /* ============================================================ comparison == */
 
-function CarbonVsCeramic() {
+function CarbonVsCeramic({ pricing }: { pricing: Pricing | null }) {
+  const carbonFrom = tintTierRange(pricing, "carbon")?.min ?? null;
+  const ceramicFrom = tintTierRange(pricing, "ceramic")?.min ?? null;
+
   const rows: { label: string; carbon: string; ceramic: string }[] = [
     {
       label: "Harmful UV blocked",
@@ -470,6 +500,20 @@ function CarbonVsCeramic() {
               </tr>
             </thead>
             <tbody>
+              {/* Live ShopFlow from-prices, framed as a floor. Rendered only
+                  with data — a missing price is fine, a wrong one is not. */}
+              {(carbonFrom != null || ceramicFrom != null) && (
+                <tr className="border-b border-border">
+                  <th scope="row" className="py-3.5 pr-4 text-[0.9375rem] font-normal">
+                    Starting price — full vehicle
+                  </th>
+                  <Cell value={carbonFrom != null ? `from ${money(carbonFrom)}` : "—"} />
+                  <Cell
+                    value={ceramicFrom != null ? `from ${money(ceramicFrom)}` : "—"}
+                    highlight
+                  />
+                </tr>
+              )}
               {rows.map((r) => (
                 <tr key={r.label} className="border-b border-border">
                   <th scope="row" className="py-3.5 pr-4 text-[0.9375rem] font-normal">

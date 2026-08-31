@@ -174,6 +174,36 @@ export function startingAt(pricing: Pricing | null, slug: string): number | null
 
 export const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 
+/**
+ * The tint landing page's film-tier axis: chip / anchor key → matcher against
+ * ShopFlow service names ("Window Tint -- Ceramic" etc.). The vehicle axis is
+ * ShopFlow's own per-size pricing, so both axes stay owner-edited in ShopFlow.
+ * Adjust the matchers here — never the page logic — if Angelo renames services.
+ */
+export const TINT_TIER_MATCH = {
+  ceramic: /ceramic/i,
+  carbon: /carbon/i,
+} as const;
+
+export type TintTier = keyof typeof TINT_TIER_MATCH;
+
+/**
+ * Live full-vehicle price range for a film tier (or across both tiers when
+ * the visitor hasn't picked one). Same source and same rules as startingAt():
+ * full-vehicle rows only, and null — render nothing — when the API is down.
+ */
+export function tintTierRange(
+  pricing: Pricing | null,
+  tier: TintTier | null,
+): { min: number; max: number } | null {
+  const rows = (pricing?.rows["window-tint"] ?? []).filter(
+    (r) => r.sizes && (tier ? TINT_TIER_MATCH[tier].test(r.name) : true),
+  );
+  const amounts = rows.flatMap((r) => (r.sizes ?? []).map((s) => s.amount));
+  if (!amounts.length) return null;
+  return { min: Math.min(...amounts), max: Math.max(...amounts) };
+}
+
 export function usePricing(): Pricing | null {
   const [pricing, setPricing] = useState<Pricing | null>(null);
   useEffect(() => {
