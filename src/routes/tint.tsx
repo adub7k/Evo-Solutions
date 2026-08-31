@@ -146,7 +146,20 @@ function TintLanding() {
   // the server, and the SSR HTML must match the first client render.
   const [presetTier, setPresetTier] = useState<TintTier | null>(null);
   useEffect(() => {
-    if (window.location.hash.toLowerCase() === "#ceramic") setPresetTier("ceramic");
+    if (window.location.hash.toLowerCase() !== "#ceramic") return;
+    setPresetTier("ceramic");
+    // The router's scroll restoration wins the race against the native anchor
+    // jump on a fresh load, so jump explicitly once layout exists. Instant on
+    // purpose: the sitewide scroll-behavior:smooth animation stalls when it
+    // races hydration, and an arrival jump shouldn't animate anyway (a 4,500px
+    // glide on page load is exactly what prefers-reduced-motion is about).
+    // Twice: the cv-auto sections above only get real heights once they've
+    // been scrolled past, so the first jump lands short. The second is
+    // idempotent — a no-op when the first one already landed clean.
+    const jump = () => document.getElementById("ceramic")?.scrollIntoView({ behavior: "instant" });
+    requestAnimationFrame(jump);
+    const settle = setTimeout(jump, 500);
+    return () => clearTimeout(settle);
   }, []);
 
   const { phone, offer } = useChannel();
