@@ -129,14 +129,16 @@ function LandingHeader() {
             {site.business.name}
           </span>
         </div>
+        {/* The number itself, at every width. Search visitors comparing three
+            shops call the one whose number they can see — "Call" hides the
+            fact that satisfies them fastest. */}
         <a
           href={site.business.phoneHref}
           onClick={() => trackPhoneClick("landing-header")}
-          className="tap-target gap-2 font-display text-sm font-semibold text-accent sm:text-base"
+          className="tap-target gap-2 whitespace-nowrap font-display text-sm font-semibold text-accent sm:text-base"
         >
           <Phone className="h-4 w-4" />
-          <span className="hidden sm:inline">{site.business.phone}</span>
-          <span className="sm:hidden">Call</span>
+          {site.business.phone}
         </a>
       </div>
     </header>
@@ -185,6 +187,19 @@ function HeroWithForm() {
         <div>
           <p className="eyebrow">Albuquerque · Window Tint</p>
 
+          {/* The rating leads. A search visitor is comparing three shops in
+              three tabs, and this is the fact that decides it — it can't live
+              below the CTAs where only Meta scrollers ever saw it. */}
+          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span className="flex" aria-label="5 out of 5 stars">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
+              ))}
+            </span>
+            <span className="font-semibold">{site.reviews.rating.toFixed(1)}</span>
+            <span className="text-muted-foreground">· {site.reviews.count} Google reviews</span>
+          </p>
+
           <h1 className="mt-4 text-[clamp(2.4rem,6.4vw,4.1rem)]">
             Block <span className="text-accent">99% of the UV.</span>
             <br />
@@ -225,15 +240,16 @@ function HeroWithForm() {
             </a>
           </div>
 
+          {/* Trust strip — the rating moved above the H1, so this slot now
+              carries the rest: warranty, the actual film brands, locality.
+              Years in business is deliberately absent: it's unverified (see
+              site.unverified) and this site publishes nothing unsourced. */}
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <span className="flex" aria-label="5 out of 5 stars">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
-                ))}
-              </span>
-              {site.reviews.rating.toFixed(1)} · {site.reviews.count} Google reviews
+              <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+              Lifetime film warranty
             </span>
+            <span>{site.filmBrands.join(" & ")} film</span>
             <span>Locally owned</span>
             <span>Walk-ins welcome Mon–Sat</span>
           </div>
