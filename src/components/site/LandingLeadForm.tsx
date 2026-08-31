@@ -188,7 +188,14 @@ export function LandingLeadForm({
     // the request is in flight is still a lead in ShopFlow.
     if (leadSentFor.current !== data.phone) {
       leadSentFor.current = data.phone;
-      trackLeadCaptured(LEAD_VALUE);
+      // Tier + vehicle ride along so ad platforms can optimise toward the
+      // leads that are actually worth the most (ceramic, larger vehicles).
+      trackLeadCaptured(LEAD_VALUE, {
+        film_tier: data.tier,
+        vehicle_year: data.year,
+        vehicle_make: data.make,
+        vehicle_model: data.model,
+      });
       trackQuoteAdsConversion();
     }
 

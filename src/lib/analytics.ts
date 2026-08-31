@@ -76,9 +76,9 @@ export function trackQuoteStep(stepIndex: number, stepName: string, service: str
  * Fires once per phone number, at the moment contact details validate, so it
  * mirrors ShopFlow's lead count even if the visitor bails afterwards.
  */
-export function trackLeadCaptured(service: string): void {
-  gtagEvent("generate_lead", { service, currency: "USD", value: 1 });
-  fbqEvent("Lead", { content_category: service });
+export function trackLeadCaptured(service: string, params: Record<string, unknown> = {}): void {
+  gtagEvent("generate_lead", { service, currency: "USD", value: 1, ...params });
+  fbqEvent("Lead", { content_category: service, ...params });
 }
 
 /** Marketing partner's Google Ads conversion ("EVO Quote Form Submit"). */
