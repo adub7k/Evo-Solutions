@@ -64,6 +64,9 @@ export type ServiceContent = {
   /** Service-specific options for step 3 of the quote form. */
   goalOptions: string[];
   related: string[];
+  /** Owner's call (2026-09-04, ceramic): publish no prices for this service —
+   *  no table, no "from $X" card. The page asks for a call or photos instead. */
+  quoteOnly?: boolean;
   variant?: "auto" | "commercial";
   lead?: CommercialLead;
 };
@@ -249,6 +252,7 @@ export const services: ServiceContent[] = [
     slug: "ceramic-coating",
     route: "/ceramic-coating",
     key: "ceramic",
+    quoteOnly: true,
     leadValue: "Ceramic Coating",
     serviceName: "Ceramic Coating",
     navLabel: "Ceramic Coating",
@@ -257,7 +261,7 @@ export const services: ServiceContent[] = [
       "Professional ceramic coating in Albuquerque. Deep gloss, water and dirt that release easily, and paint protected from high-desert sun. Prep done properly. Free quote.",
     eyebrow: "Ceramic Coating · Albuquerque",
     headline: "Gloss that survives the high desert.",
-    sub: "A coating is a semi-permanent layer bonded to your clear coat. Done right, the car stays glossier, washes in half the time and stops oxidising under New Mexico sun. Done fast, it locks in every swirl that was already there.",
+    sub: "A Nasiol ceramic coating bonded to your clear coat, over paint we've corrected first. The car stays glossier, washes in half the time and stops oxidising under New Mexico sun — with an optional 10-year paint warranty against stains and etching.",
     imageSlot: "service_ceramic",
     cardBlurb:
       "A bonded layer that makes paint easier to clean, harder to stain, and noticeably glossier for years.",
@@ -317,6 +321,7 @@ export const services: ServiceContent[] = [
         "Resist UV oxidation, chemical staining and water spotting",
         "Last years rather than weeks",
         "Give bird droppings and sap a barrier to sit on",
+        "Qualify for an optional 10-year paint warranty against stains and etching",
       ],
       doesNot: [
         "Stop rock chips — that is what paint protection film is for",
@@ -363,7 +368,11 @@ export const services: ServiceContent[] = [
       },
       {
         q: "How long does it last?",
-        a: "That depends on the coating we agree on and, honestly, on how you wash it. A coated car put through spinning brushes every fortnight will not go the distance. We'll tell you the realistic figure for the product we're quoting rather than a headline number.",
+        a: "We install Nasiol, a professional-grade coating measured in years, not months — and if you want it in writing, we offer an optional 10-year paint warranty against stains and etching. How you wash it matters too: a coated car put through spinning brushes every couple of weeks will not go the distance, and we'll show you how to look after it at pickup.",
+      },
+      {
+        q: "Is there a warranty?",
+        a: "Yes, as an add-on. The 10-year paint warranty covers stains and etching — the hard-water spots, bird droppings and bug guts that eat into unprotected clear coat. It's priced separately from the coating itself, so you choose whether it's worth it for how you use the car. Ask for it on your quote and we'll give you the exact figure.",
       },
       {
         q: "Ceramic coating or PPF?",

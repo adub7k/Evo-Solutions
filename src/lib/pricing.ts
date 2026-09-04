@@ -29,6 +29,8 @@ export type PriceRow = {
 export type AddOn = { id: string; name: string; price: number };
 
 export type Pricing = {
+  /** The tenant's vehicle sizes in display order (column order for tables). */
+  sizes: { key: string; label: string }[];
   /** Rows grouped by the site's service slug. */
   rows: Record<string, PriceRow[]>;
   addons: Record<string, AddOn[]>;
@@ -137,6 +139,7 @@ function normalize(info: Record<string, unknown>): Pricing {
   const dep = info.deposit as { enabled?: boolean; amount?: number; message?: string } | undefined;
 
   return {
+    sizes: sizes.map((sz) => ({ key: sz.key, label: sz.label })),
     rows,
     addons,
     deposit:

@@ -28,7 +28,7 @@ export function ServiceGrid() {
               name={s.serviceName}
               blurb={s.cardBlurb}
               benefits={s.cardBenefits}
-              from={startingAt(pricing, s.slug)}
+              from={s.quoteOnly ? null : startingAt(pricing, s.slug)}
             />
           </Reveal>
         ))}

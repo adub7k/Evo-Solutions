@@ -103,6 +103,29 @@ export const site = {
     warranty: "Lifetime warranty on the film",
   },
 
+  /**
+   * Ceramic coating brand + warranty — SUPPLIED BY THE OWNER 2026-09-04.
+   *
+   * The coating installed is Nasiol. The warranty is a paid, optional add-on:
+   * a 10-year paint warranty covering stains and etching. We say exactly that
+   * and nothing more — no "lifetime", no "scratch-proof", no transferability,
+   * and no product line (NL272 etc.) until Angelo confirms which one he uses.
+   * The add-on's price is read live from ShopFlow (an add-on whose name
+   * contains "coating" + "warranty"), so it never has to be typed here.
+   */
+  coatingSpecs: {
+    sourcedFrom: "Owner (Angelo)",
+    sourcedOn: "2026-09-04",
+    brand: "Nasiol",
+    warranty: {
+      years: 10,
+      covers: "stains and etching",
+      /** Sold separately — the base coating price does not include it. */
+      paidAddOn: true,
+      label: "10-year paint warranty",
+    },
+  },
+
   serviceArea: {
     primary: "Albuquerque, New Mexico",
     /** Confirmed by Angelo as within normal travel for commercial work. */
@@ -125,9 +148,9 @@ export const site = {
    * Flip a value into the published config above only with a source.
    */
   unverified: {
-    /** Tint warranty is now owner-confirmed and published in `tintSpecs`.
-     *  PPF ("10-year") and coating warranties are still unsourced. */
-    warranty: { ppf: null, coating: null },
+    /** Tint warranty is owner-confirmed in `tintSpecs`; the coating warranty
+     *  is owner-confirmed in `coatingSpecs`. PPF ("10-year") is still unsourced. */
+    warranty: { ppf: null },
     /** Site claimed "certified installers" / "factory-trained". */
     certifications: null,
     /** Site claimed a "climate-controlled, dust-free bay". */

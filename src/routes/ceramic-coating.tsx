@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ArrowRight, Phone, ShieldCheck } from "lucide-react";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ServiceHero } from "@/components/site/ServiceHero";
@@ -6,7 +7,6 @@ import { Section, SectionHead } from "@/components/site/Section";
 import { CostGrid, BenefitGrid, TruthTable, IncludedList } from "@/components/site/ServiceSections";
 import { GalleryGrid } from "@/components/site/GalleryGrid";
 import { QuoteBlock } from "@/components/site/QuoteBlock";
-import { PricingTable } from "@/components/site/PricingTable";
 import { ProcessList } from "@/components/site/ProcessList";
 import { FaqList } from "@/components/site/FaqList";
 import { RelatedServices } from "@/components/site/RelatedServices";
@@ -14,6 +14,8 @@ import { FinalCTA } from "@/components/site/FinalCTA";
 import { Reveal } from "@/components/site/Reveal";
 
 import { serviceBySlug } from "@/content/services";
+import { site } from "@/config/site";
+import { trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
 import { seo, faqLd, serviceLd, breadcrumbLd } from "@/lib/seo";
 
 const s = serviceBySlug("ceramic-coating")!;
@@ -40,6 +42,93 @@ export const Route = createFileRoute("/ceramic-coating")({
   },
   component: CeramicCoating,
 });
+
+/**
+ * Brand + warranty, owner-sourced (site.coatingSpecs). The warranty is a paid
+ * add-on; like the coating itself it is priced on the quote, never here.
+ */
+function CoatingGuarantee() {
+  const spec = site.coatingSpecs;
+
+  return (
+    <Section>
+      <div className="container-x">
+        <Reveal className="mx-auto max-w-3xl rounded-lg border border-accent/35 bg-surface/50 p-7 text-center sm:p-10">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent-soft">
+            <ShieldCheck className="h-7 w-7 text-accent" />
+          </div>
+          <p className="eyebrow mt-6">{spec.brand} ceramic coating</p>
+          <h2 className="mt-3 text-[clamp(1.7rem,3.6vw,2.4rem)]">
+            Optional {spec.warranty.years}-year paint warranty.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
+            We install {spec.brand}, a professional-grade coating. If you want the protection in
+            writing, add the {spec.warranty.years}-year paint warranty: it covers{" "}
+            {spec.warranty.covers} — the hard-water spots and bird droppings that eat into
+            unprotected clear coat. It's priced separately from the coating, so you decide whether
+            it's worth it for how you use the car.
+          </p>
+          <a
+            href="#quote"
+            onClick={() => trackQuoteClick("ceramic-guarantee", s.serviceName)}
+            className="btn btn-primary btn-lg mt-8"
+          >
+            Get My Coating Quote
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </Reveal>
+      </div>
+    </Section>
+  );
+}
+
+/**
+ * Coating is quote-only by the owner's decision (2026-09-04): the price
+ * depends on paint condition and how far the correction goes, so a chart
+ * either overpromises or scares people off. This block replaces the table.
+ */
+function CallForQuote() {
+  return (
+    <Section tone="raised">
+      <div className="container-x">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
+          <SectionHead
+            eyebrow="Pricing"
+            title="Priced on your car, not off a chart."
+            body="A coating on brand-new paint and a coating on three summers of swirls are not the same job, and we won't pretend they cost the same. Tell us the vehicle and send a few photos in daylight, or just call — you'll get one flat number for exactly what your paint needs, not a range."
+          />
+          <Reveal delay={80}>
+            <div className="rounded-lg border border-accent/35 bg-surface/50 p-6 sm:p-8">
+              <p className="font-display text-lg font-semibold">Get your coating quote</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Most quotes come back the same day. Walk-ins welcome Mon–Sat if you'd rather we
+                see the paint in person.
+              </p>
+              <div className="mt-6 flex flex-col gap-3">
+                <a
+                  href={site.business.phoneHref}
+                  onClick={() => trackPhoneClick("ceramic-pricing")}
+                  className="btn btn-primary btn-lg"
+                >
+                  <Phone className="h-4 w-4" />
+                  Call {site.business.phone}
+                </a>
+                <a
+                  href="#quote"
+                  onClick={() => trackQuoteClick("ceramic-pricing", s.serviceName)}
+                  className="btn btn-ghost btn-lg"
+                >
+                  Send photos for a quote
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </Section>
+  );
+}
 
 function CeramicCoating() {
   return (
@@ -124,6 +213,8 @@ function CeramicCoating() {
         </div>
       </Section>
 
+      <CoatingGuarantee />
+
       <Section tone="raised" className="cv-auto">
         <div className="container-x">
           <SectionHead eyebrow="Coating & correction work" title="Paint we've brought back." />
@@ -138,24 +229,8 @@ function CeramicCoating() {
         </div>
       </Section>
 
-      {/* Published pricing, read live from ShopFlow so it can never drift
-          from what Angelo actually charges. */}
-      <Section tone="raised">
-        <div className="container-x">
-          <SectionHead
-            eyebrow="Pricing"
-            title="What a coating costs."
-            body="The coating itself is a known number. What varies is the correction underneath it — which is most of the work."
-          />
-          <div className="mt-10">
-            <PricingTable
-              slug={s.slug}
-              serviceName={s.serviceName}
-              note="This covers the coating on paint that’s ready for it. Paint correction is quoted separately once we’ve seen the car, because that’s the part that genuinely varies."
-            />
-          </div>
-        </div>
-      </Section>
+      {/* No price table here — see CallForQuote. */}
+      <CallForQuote />
 
       <QuoteBlock
         heading={s.quote.heading}

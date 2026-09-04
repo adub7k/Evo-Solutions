@@ -26,8 +26,12 @@ export function PricingTable({
   if (!rows?.length) return null;
 
   const addons = pricing?.addons[slug] ?? [];
-  // Column headers come from the sized rows; flat-priced rows span the table.
-  const sizeCols = rows.find((r) => r.sizes)?.sizes ?? [];
+  // Column headers are every size ANY row prices, in the tenant's order —
+  // a row priced for sedans only (e.g. "new paint") must not shrink the table
+  // to one column and hide the other rows' SUV/truck prices.
+  const sizeCols = (pricing?.sizes ?? []).filter((sz) =>
+    rows.some((r) => r.sizes?.some((s) => s.key === sz.key)),
+  );
 
   return (
     <Reveal>
@@ -93,14 +97,21 @@ export function PricingTable({
                   {r.name}
                 </th>
                 {r.sizes ? (
-                  r.sizes.map((s) => (
-                    <td
-                      key={s.key}
-                      className="px-5 py-4 text-right font-display text-lg font-semibold tabular-nums"
-                    >
-                      {money(s.amount)}
-                    </td>
-                  ))
+                  sizeCols.map((c) => {
+                    const s = r.sizes?.find((x) => x.key === c.key);
+                    return (
+                      <td
+                        key={c.key}
+                        className="px-5 py-4 text-right font-display text-lg font-semibold tabular-nums"
+                      >
+                        {s ? (
+                          money(s.amount)
+                        ) : (
+                          <span className="text-sm font-normal text-muted-foreground">ask</span>
+                        )}
+                      </td>
+                    );
+                  })
                 ) : (
                   <td
                     colSpan={Math.max(sizeCols.length, 1)}
