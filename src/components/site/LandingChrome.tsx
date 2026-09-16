@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Phone, X } from "lucide-react";
 
 import { site } from "@/config/site";
@@ -16,15 +17,20 @@ import { useScrolledPast } from "@/lib/useScrolledPast";
 /* ================================================================ header == */
 
 /**
- * A logo and a phone number. No navigation — there is nowhere else to go, by
- * design. The phone number is the one competing call to action, and it earns
- * its place: on paid mobile traffic a call is worth more than a form fill.
+ * A logo and a phone number. No navigation menu — the phone number is the one
+ * competing call to action, and it earns its place: on paid mobile traffic a
+ * call is worth more than a form fill. The logo itself is the single way off
+ * the page (owner's request 2026-09-16): it goes home, where the full site is.
  */
 export function LandingHeader({ phone }: { phone: ChannelPhone }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
       <div className="container-x flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
+        <Link
+          to="/"
+          aria-label={`${site.business.name} — home`}
+          className="tap-target gap-2.5 rounded-md"
+        >
           <img
             src="/img/evo-solutions-mark-512.png"
             alt=""
@@ -35,7 +41,7 @@ export function LandingHeader({ phone }: { phone: ChannelPhone }) {
           <span className="font-display text-base font-bold tracking-tight">
             {site.business.name}
           </span>
-        </div>
+        </Link>
         {/* The number itself, at every width. Search visitors comparing three
             shops call the one whose number they can see — "Call" hides the
             fact that satisfies them fastest. */}
