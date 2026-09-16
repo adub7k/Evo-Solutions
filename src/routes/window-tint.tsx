@@ -22,6 +22,7 @@ import { RelatedServices } from "@/components/site/RelatedServices";
 import { FinalCTA } from "@/components/site/FinalCTA";
 import { Reveal } from "@/components/site/Reveal";
 
+import { site } from "@/config/site";
 import { serviceBySlug } from "@/content/services";
 import { seo, faqLd, serviceLd, breadcrumbLd } from "@/lib/seo";
 
@@ -190,23 +191,27 @@ function WindowTint() {
 
       {/* Published pricing, read live from ShopFlow so it can never drift
           from what Angelo actually charges. */}
-      <Section>
-        <div className="container-x">
-          <SectionHead
-            eyebrow="Pricing"
-            title="What tint costs here."
-            body="Real prices for a standard vehicle, straight from our booking system — the same numbers we quote at the counter."
-          />
-          <div className="mt-10">
-            <PricingTable
-              slug={s.slug}
-              serviceName={s.serviceName}
-              note="Removing failed old film is quoted separately — it's real labour, especially on rear glass with defroster lines. Oversized or unusually shaped glass can move the number too."
+      {/* Owner's call: no prices on the website (site.publishPrices). The
+          table would render empty, so the whole section goes with it. */}
+      {site.publishPrices && (
+        <Section>
+          <div className="container-x">
+            <SectionHead
+              eyebrow="Pricing"
+              title="What tint costs here."
+              body="Real prices for a standard vehicle, straight from our booking system — the same numbers we quote at the counter."
             />
+            <div className="mt-10">
+              <PricingTable
+                slug={s.slug}
+                serviceName={s.serviceName}
+                note="Removing failed old film is quoted separately — it's real labour, especially on rear glass with defroster lines. Oversized or unusually shaped glass can move the number too."
+              />
+            </div>
+            <BrandLine className="mt-6" />
           </div>
-          <BrandLine className="mt-6" />
-        </div>
-      </Section>
+        </Section>
+      )}
 
       <QuoteBlock heading={s.quote.heading} sub={s.quote.sub} serviceSlug={s.slug} />
 

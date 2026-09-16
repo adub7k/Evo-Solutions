@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from "react";
 import { publicApi } from "@/config/shopflow";
+import { site } from "@/config/site";
 
 export type SizePrice = { key: string; label: string; amount: number };
 
@@ -64,6 +65,10 @@ const ADDON_MATCHERS: [RegExp, string][] = [
 let pricingPromise: Promise<Pricing | null> | null = null;
 
 export function fetchPricing(): Promise<Pricing | null> {
+  // Owner's call: no prices on the website (site.publishPrices). Every
+  // consumer already handles null as "API down — render nothing", so the
+  // switch lives here and not in a dozen components.
+  if (!site.publishPrices) return Promise.resolve(null);
   if (!pricingPromise) {
     pricingPromise = fetch(publicApi("/info"))
       .then((res) => {
@@ -202,6 +207,21 @@ export function tintTierRange(
   const rows = (pricing?.rows["window-tint"] ?? []).filter(
     (r) => r.sizes && (tier ? TINT_TIER_MATCH[tier].test(r.name) : true),
   );
+  const amounts = rows.flatMap((r) => (r.sizes ?? []).map((s) => s.amount));
+  if (!amounts.length) return null;
+  return { min: Math.min(...amounts), max: Math.max(...amounts) };
+}
+
+/**
+ * Live price range for standard PPF coverage — the sized "PPF" row(s) under
+ * the film category, across the tenant's vehicle sizes. Flat-rate extras (the
+ * large-vehicle tack pack) are excluded for the same reason startingAt()
+ * ignores partial tint lines: a from-price has to be the standard job. Which
+ * panels "standard" covers is Angelo's ShopFlow service name, not this file.
+ * Null — render nothing — when the API is down.
+ */
+export function ppfRange(pricing: Pricing | null): { min: number; max: number } | null {
+  const rows = (pricing?.rows["paint-protection-film"] ?? []).filter((r) => r.sizes);
   const amounts = rows.flatMap((r) => (r.sizes ?? []).map((s) => s.amount));
   if (!amounts.length) return null;
   return { min: Math.min(...amounts), max: Math.max(...amounts) };

@@ -21,6 +21,8 @@ import { RelatedServices } from "@/components/site/RelatedServices";
 import { FinalCTA } from "@/components/site/FinalCTA";
 import { Reveal } from "@/components/site/Reveal";
 
+import { ppfImpactZones as impactZones } from "@/content/landing";
+import { site } from "@/config/site";
 import { serviceBySlug } from "@/content/services";
 import { seo, faqLd, serviceLd, breadcrumbLd } from "@/lib/seo";
 
@@ -29,16 +31,6 @@ const PATH = "/paint-protection-film";
 const CRUMBS = [
   { name: "Home", path: "/" },
   { name: "Paint Protection Film", path: PATH },
-];
-
-/** Where damage lands, in order of how often we see it. */
-const impactZones = [
-  { zone: "Front bumper", note: "Takes the most, by a wide margin." },
-  { zone: "Leading edge of the hood", note: "Catches almost everything that clears the bumper." },
-  { zone: "Mirrors", note: "Small, exposed, and expensive to repaint." },
-  { zone: "Headlights", note: "Sandblasting hazes the lens — a safety issue, not just cosmetic." },
-  { zone: "A-pillars & roof edge", note: "Highway miles at speed." },
-  { zone: "Rockers & behind the wheels", note: "Everything the front tyres throw backwards." },
 ];
 
 export const Route = createFileRoute("/paint-protection-film")({
@@ -159,23 +151,27 @@ function Ppf() {
 
       {/* Published pricing, read live from ShopFlow so it can never drift
           from what Angelo actually charges. */}
-      <Section>
-        <div className="container-x">
-          <SectionHead
-            eyebrow="Pricing"
-            title="What film costs."
-            body="Our standard coverage by vehicle size. Extended and full-body coverage is quoted per car, because no two are the same shape."
-          />
-          <div className="mt-10">
-            <PricingTable
-              slug={s.slug}
-              serviceName={s.serviceName}
-              note="This is standard coverage for that vehicle size. Track, extended and full-body packages are quoted individually, and existing chips are worth addressing before film goes on."
+      {/* Owner's call: no prices on the website (site.publishPrices). The
+          table would render empty, so the whole section goes with it. */}
+      {site.publishPrices && (
+        <Section>
+          <div className="container-x">
+            <SectionHead
+              eyebrow="Pricing"
+              title="What film costs."
+              body="Our standard coverage by vehicle size. Extended and full-body coverage is quoted per car, because no two are the same shape."
             />
+            <div className="mt-10">
+              <PricingTable
+                slug={s.slug}
+                serviceName={s.serviceName}
+                note="This is standard coverage for that vehicle size. Track, extended and full-body packages are quoted individually, and existing chips are worth addressing before film goes on."
+              />
+            </div>
+            <BrandLine className="mt-6" />
           </div>
-          <BrandLine className="mt-6" />
-        </div>
-      </Section>
+        </Section>
+      )}
 
       <QuoteBlock
         heading={s.quote.heading}

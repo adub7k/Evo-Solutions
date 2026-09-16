@@ -38,7 +38,7 @@ export const whyEvo = [
 export const homeFaqs = [
   {
     q: "How much does window tint cost in Albuquerque?",
-    a: "Our prices are published on the window tint page — carbon and ceramic, by vehicle size, with windshield and roof add-ons listed. They're the same numbers we quote at the counter. The only things that move them are stripping failed old film, or unusually shaped glass, and we'll tell you before we start rather than at pickup.",
+    a: "We quote a flat number for your specific car — carbon or ceramic, by vehicle size, with windshield and roof add-ons if you want them — and it's the same number we'd give you at the counter. Tell us the year, make and model and you'll usually have it the same day. The only things that move it are stripping failed old film or unusually shaped glass, and we'll tell you before we start rather than at pickup.",
   },
   {
     q: "Is window tint legal in New Mexico?",
@@ -62,7 +62,7 @@ export const homeFaqs = [
   },
   {
     q: "Is ceramic coating worth it?",
-    a: "In this climate, more than most. UV at 5,300 feet and hard water are exactly what a coating is best at resisting. If the car lives outside, it earns its keep. If it's garaged and you're selling next year, we'll tell you it's a harder argument. Coating prices are published on the ceramic coating page; what varies is the paint correction underneath.",
+    a: "In this climate, more than most. UV at 5,300 feet and hard water are exactly what a coating is best at resisting. If the car lives outside, it earns its keep. If it's garaged and you're selling next year, we'll tell you it's a harder argument. Coating is priced on your car, not off a chart — what varies is the paint correction underneath, so send a few photos or call and you'll get one flat number.",
   },
   {
     q: "What does paint protection film protect against?",

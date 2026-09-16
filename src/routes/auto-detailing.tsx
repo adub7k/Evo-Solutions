@@ -168,22 +168,26 @@ function Detailing() {
 
       {/* Published pricing, read live from ShopFlow so it can never drift
           from what Angelo actually charges. */}
-      <Section tone="raised">
-        <div className="container-x">
-          <SectionHead
-            eyebrow="Pricing"
-            title="What a detail costs."
-            body="Priced by vehicle size, same as at the counter. Condition is the only thing that moves it."
-          />
-          <div className="mt-10">
-            <PricingTable
-              slug={s.slug}
-              serviceName={s.serviceName}
-              note="Heavy soiling, embedded pet hair and paint correction are quoted on top once we’ve seen the car — photos with your quote request get you a far more accurate number."
+      {/* Owner's call: no prices on the website (site.publishPrices). The
+          table would render empty, so the whole section goes with it. */}
+      {site.publishPrices && (
+        <Section tone="raised">
+          <div className="container-x">
+            <SectionHead
+              eyebrow="Pricing"
+              title="What a detail costs."
+              body="Priced by vehicle size, same as at the counter. Condition is the only thing that moves it."
             />
+            <div className="mt-10">
+              <PricingTable
+                slug={s.slug}
+                serviceName={s.serviceName}
+                note="Heavy soiling, embedded pet hair and paint correction are quoted on top once we’ve seen the car — photos with your quote request get you a far more accurate number."
+              />
+            </div>
           </div>
-        </div>
-      </Section>
+        </Section>
+      )}
 
       <QuoteBlock
         heading={s.quote.heading}

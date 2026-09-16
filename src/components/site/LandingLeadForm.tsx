@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, Check, Loader2, Phone, ShieldCheck } from "lucide-react";
 
 import { site } from "@/config/site";
-import { serviceBySlug } from "@/content/services";
+import { optionKey, tintLanding, type LandingVariant } from "@/content/landing";
 import {
   captureAttribution,
   isValidEmail,
@@ -12,15 +12,16 @@ import {
 } from "@/lib/leads";
 import {
   trackLeadCaptured,
+  trackPhoneClick,
   trackQuoteAdsConversion,
   trackQuoteComplete,
   trackQuoteError,
   trackQuoteStart,
 } from "@/lib/analytics";
-import { money, tintTierRange, usePricing, type TintTier } from "@/lib/pricing";
+import { money, usePricing } from "@/lib/pricing";
 
 /**
- * The paid-social lead form.
+ * The paid-traffic lead form, shared by /tint and /ppf.
  *
  * This is deliberately NOT the five-step /quote flow. That flow is right for
  * someone who arrived via search and is already reading about film; a visitor
@@ -34,52 +35,17 @@ import { money, tintTierRange, usePricing, type TintTier } from "@/lib/pricing";
  *     (customFields, all four flagged required). A lead without them is
  *     rejected server-side, so they can't be trimmed away for conversion's
  *     sake; they're laid out as one compact row instead.
- *   • Film tier and goal — optional chips, pre-answered with "not sure", so a
- *     visitor can submit without touching them but a decisive one qualifies
- *     themselves.
+ *   • One qualifying choice (film tier / coverage) and one concern — optional
+ *     chips, pre-answered with "not sure", so a visitor can submit without
+ *     touching them but a decisive one qualifies themselves.
  *   • Email — optional. The server doesn't need it and every extra required
  *     field on paid traffic costs leads.
  *
- * Copy rule inherited from the rest of the site: no prices here (they live in
- * ShopFlow, see lib/pricing.ts). The performance figures and the warranty are
- * the owner-supplied ones in `site.tintSpecs` — this form renders them, it
- * doesn't invent them.
+ * Everything that differs per page — copy, chips, the success-screen estimate
+ * — is a `LandingVariant` from content/landing.ts. Copy rule inherited from
+ * the rest of the site: no prices typed here (they live in ShopFlow, see
+ * lib/pricing.ts) and no claim that isn't in `site.*Specs` with a source.
  */
-
-const TINT = serviceBySlug("window-tint");
-
-/** Matches the shop's ShopFlow lead-form option list character for character. */
-const LEAD_VALUE = TINT?.leadValue ?? "Window tint";
-
-const specs = site.tintSpecs;
-
-/** The tier chips carry the numbers, so choosing one is itself the pitch. */
-const TIERS = [
-  `Ceramic — ${specs.ceramic.heat}% heat`,
-  `Carbon — ${specs.carbon.heat}% heat`,
-  "Not sure — recommend one",
-] as const;
-
-/**
- * Success-screen estimate lookup.
- *
- * Both axes stay owner-edited in ShopFlow: the vehicle axis is ShopFlow's own
- * per-size pricing and the film-tier axis is the TINT_TIER_MATCH matcher map
- * in lib/pricing.ts. This maps a tier chip to that axis — edit there, not here.
- * No pricing data (API down) → no estimate block; the callback promise stands
- * on its own, and a missing estimate is fine where a wrong one is not.
- */
-const chipTier = (chip: string): TintTier | null =>
-  chip.startsWith("Ceramic") ? "ceramic" : chip.startsWith("Carbon") ? "carbon" : null;
-
-/** Trimmed from the tint page's goal list — four reads faster than six. */
-const GOALS = [
-  "Heat — the car bakes",
-  "Glare on my commute",
-  "Privacy / security",
-  "Looks",
-  "Removing old tint",
-] as const;
 
 type Data = {
   name: string;
@@ -89,12 +55,12 @@ type Data = {
   make: string;
   model: string;
   color: string;
-  tier: string;
-  goal: string;
+  choice: string;
+  concern: string;
   honeypot: string;
 };
 
-const initial: Data = {
+const initialFor = (v: LandingVariant): Data => ({
   name: "",
   phone: "",
   email: "",
@@ -102,10 +68,10 @@ const initial: Data = {
   make: "",
   model: "",
   color: "",
-  tier: "Not sure — recommend one",
-  goal: "",
+  choice: v.choice.initial,
+  concern: "",
   honeypot: "",
-};
+});
 
 type Errors = Partial<
   Record<"name" | "phone" | "email" | "year" | "make" | "model" | "color", string>
@@ -113,12 +79,20 @@ type Errors = Partial<
 
 export function LandingLeadForm({
   id = "quote",
-  presetTier = null,
+  variant = tintLanding,
+  preset = null,
+  presetKey = 0,
   phone,
 }: {
   id?: string;
-  /** Preselects a film tier (e.g. /tint#ceramic ad traffic). */
-  presetTier?: TintTier | null;
+  variant?: LandingVariant;
+  /**
+   * Preselects a choice chip by key prefix — "ceramic" (/tint#ceramic ad
+   * traffic), "full-front" (/ppf#full-front, or the coverage cards on /ppf).
+   */
+  preset?: string | null;
+  /** Bump to re-apply the same preset (a card tapped twice). */
+  presetKey?: number;
   /** Channel-specific display number; defaults to the shop's own. */
   phone?: { display: string; href: string };
 }) {
@@ -128,7 +102,7 @@ export function LandingLeadForm({
   const fid = (suffix: string) => `${id}-${suffix}`;
   const shopPhone = phone ?? { display: site.business.phone, href: site.business.phoneHref };
   const pricing = usePricing();
-  const [data, setData] = useState<Data>(initial);
+  const [data, setData] = useState<Data>(() => initialFor(variant));
   const [errors, setErrors] = useState<Errors>({});
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -146,17 +120,19 @@ export function LandingLeadForm({
   }, []);
 
   // Ad-driven preselect (#ceramic). Applied via setData, not set(), so it
-  // neither fires quote_start nor overrides a tier the visitor already chose.
+  // neither fires quote_start nor overrides a choice the visitor already made.
+  // A preset is an explicit choice — from the arrival hash or a coverage card
+  // — so it applies whenever it changes, even after the visitor has typed.
   useEffect(() => {
-    if (!presetTier || startedRef.current) return;
-    const chip = TIERS.find((t) => t.toLowerCase().startsWith(presetTier));
-    if (chip) setData((d) => ({ ...d, tier: chip }));
-  }, [presetTier]);
+    if (!preset) return;
+    const chip = variant.choice.options.find((o) => optionKey(o).startsWith(preset));
+    if (chip) setData((d) => ({ ...d, choice: chip }));
+  }, [preset, presetKey, variant]);
 
   const set = <K extends keyof Data>(k: K, v: Data[K]) => {
     if (!startedRef.current) {
       startedRef.current = true;
-      trackQuoteStart(LEAD_VALUE);
+      trackQuoteStart(variant.leadValue);
     }
     setData((d) => ({ ...d, [k]: v }));
     setErrors((e) => (k in e ? { ...e, [k]: undefined } : e));
@@ -190,8 +166,8 @@ export function LandingLeadForm({
       leadSentFor.current = data.phone;
       // Tier + vehicle ride along so ad platforms can optimise toward the
       // leads that are actually worth the most (ceramic, larger vehicles).
-      trackLeadCaptured(LEAD_VALUE, {
-        film_tier: data.tier,
+      trackLeadCaptured(variant.leadValue, {
+        [variant.choice.param]: data.choice,
         vehicle_year: data.year,
         vehicle_make: data.make,
         vehicle_model: data.model,
@@ -203,12 +179,12 @@ export function LandingLeadForm({
       name: data.name,
       phone: data.phone,
       email: data.email,
-      service: "Window Tint",
-      serviceTag: LEAD_VALUE,
-      goal: data.goal,
+      service: variant.service,
+      serviceTag: variant.leadValue,
+      goal: data.concern,
       timeline: "",
       notes: "",
-      extraLines: [`Film tier: ${data.tier}`, "Source: tint landing page (paid social)"],
+      extraLines: [`${variant.choice.noteLabel}: ${data.choice}`, variant.sourceLine],
       vehicle: {
         year: data.year,
         make: data.make,
@@ -222,7 +198,7 @@ export function LandingLeadForm({
     setSending(false);
     if (res.ok) {
       setSubmitted(true);
-      trackQuoteComplete(LEAD_VALUE);
+      trackQuoteComplete(variant.leadValue);
       requestAnimationFrame(() => successRef.current?.focus());
     } else {
       trackQuoteError(res.error || "unknown");
@@ -236,12 +212,13 @@ export function LandingLeadForm({
 
   /* ------------------------------------------------------------ success -- */
   if (submitted) {
-    // The CTA said "Get My Tint Price", so the success screen shows one — a
-    // live full-vehicle range for the chosen tier (both tiers when unsure),
-    // clearly an estimate until the shop confirms the flat number by text.
-    const tier = chipTier(data.tier);
-    const range = tintTierRange(pricing, tier);
-    const tierLabel = tier ?? "carbon or ceramic";
+    // The CTA promised a price, so the success screen shows one — a live
+    // range from ShopFlow for what was chosen, clearly an estimate until the
+    // shop confirms the flat number by text. No data → no estimate block; the
+    // callback promise stands on its own, and a missing estimate is fine
+    // where a wrong one is not.
+    const vehicle = { year: data.year, make: data.make, model: data.model };
+    const est = variant.estimate(pricing, data.choice);
 
     return (
       <div
@@ -261,26 +238,20 @@ export function LandingLeadForm({
             Got it, {data.name.trim().split(" ")[0]}.
           </h2>
 
-          {range && (
+          {est && (
             <div className="mx-auto mt-6 max-w-sm rounded-lg border border-border bg-surface-2 p-5">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Estimated price — full vehicle, {tierLabel}
-              </p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{est.label}</p>
               <p className="mt-1.5 font-display text-3xl font-bold tracking-tight text-accent">
-                {range.min === range.max
-                  ? money(range.min)
-                  : `${money(range.min)}–${money(range.max)}`}
+                {est.min === est.max ? money(est.min) : `${money(est.min)}–${money(est.max)}`}
               </p>
               <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-                Estimate only, pending final confirmation — where your {data.make} {data.model}{" "}
-                lands depends on its size and glass.
+                {variant.estimateNote(data.choice, vehicle)}
               </p>
             </div>
           )}
 
           <p className="mx-auto mt-5 max-w-sm text-muted-foreground">
-            We'll text your exact flat price for the {data.year} {data.make} {data.model} — usually
-            the same day during shop hours.
+            {variant.successNote(data.choice, vehicle)}
           </p>
           <a href={shopPhone.href} className="btn btn-primary btn-lg mt-6" data-cta="success-call">
             <Phone className="h-4 w-4" />
@@ -295,39 +266,48 @@ export function LandingLeadForm({
   }
 
   /* --------------------------------------------------------------- form -- */
+  const choiceChips = (
+    <Chips
+      key="choice"
+      legend={variant.choice.legend}
+      hint={variant.choice.hint}
+      name={fid("choice")}
+      options={variant.choice.options}
+      value={data.choice}
+      onChange={(v) => set("choice", v)}
+    />
+  );
+  const concernChips = (
+    <Chips
+      key="concern"
+      legend={variant.concern.legend}
+      name={fid("concern")}
+      options={variant.concern.options}
+      value={data.concern}
+      onChange={(v) => set("concern", v)}
+    />
+  );
+  const chips = variant.choiceFirst ? [choiceChips, concernChips] : [concernChips, choiceChips];
+
   return (
     <form id={id} onSubmit={submit} noValidate className="panel scroll-mt-24 p-5 sm:p-7">
-      <h2 className="font-display text-[clamp(1.35rem,2.6vw,1.75rem)]">Get your tint price</h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Tell us the car and what's bothering you. We'll text back a shade recommendation and a flat
-        number — no deposit, no obligation.
-      </p>
+      <h2 className="font-display text-[clamp(1.35rem,2.6vw,1.75rem)]">{variant.form.heading}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{variant.form.intro}</p>
       <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-          {specs.warranty}
-        </span>
-        <span>{specs.ceramic.uv}% UV blocked</span>
-        <span>Up to {specs.ceramic.heat}% heat rejected</span>
+        {variant.form.trust.map((t, i) =>
+          i === 0 ? (
+            <span key={t} className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+              {t}
+            </span>
+          ) : (
+            <span key={t}>{t}</span>
+          ),
+        )}
       </p>
 
       <div className="mt-6 space-y-6">
-        <Chips
-          legend="What's bothering you?"
-          name={fid("goal")}
-          options={GOALS}
-          value={data.goal}
-          onChange={(v) => set("goal", v)}
-        />
-
-        <Chips
-          legend="Film"
-          hint={`Both block ${specs.ceramic.uv}% of UV and never purple. The difference is heat — ${specs.carbon.heat}% vs ${specs.ceramic.heat}%.`}
-          name={fid("tier")}
-          options={TIERS}
-          value={data.tier}
-          onChange={(v) => set("tier", v)}
-        />
+        {chips}
 
         <fieldset>
           <legend className="mb-3 font-display text-[0.9375rem] font-semibold">Your vehicle</legend>
@@ -392,7 +372,7 @@ export function LandingLeadForm({
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              hint="We'll text your price here."
+              hint={variant.form.phoneHint}
             />
             <Input
               idPrefix={id}
@@ -440,19 +420,33 @@ export function LandingLeadForm({
         </div>
       )}
 
-      <button type="submit" disabled={sending} className="btn btn-primary btn-lg mt-7 w-full">
-        {sending ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Sending…
-          </>
-        ) : (
-          <>
-            Get My Tint Price
-            <ArrowRight className="h-4 w-4" />
-          </>
-        )}
-      </button>
+      {/* Submit, then click-to-call directly under it. A visitor who has got
+          this far and would rather talk gets the number right here, not back
+          up in the header — on mobile the call is the higher-intent action.
+          Stacked at every width: the form column is narrow on desktop too. */}
+      <div className="mt-7 flex flex-col gap-3">
+        <button type="submit" disabled={sending} className="btn btn-primary btn-lg w-full">
+          {sending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            <>
+              {variant.form.cta}
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+        <a
+          href={shopPhone.href}
+          onClick={() => trackPhoneClick("landing-form")}
+          className="btn btn-ghost btn-lg w-full"
+        >
+          <Phone className="h-4 w-4" />
+          Call {shopPhone.display}
+        </a>
+      </div>
 
       <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />

@@ -49,6 +49,19 @@ export const site = {
     ],
   },
 
+  /**
+   * OWNER DECISION 2026-09-16: no prices anywhere on the website.
+   *
+   * ShopFlow still holds the real prices (they drive booking and deposits),
+   * but with this false `lib/pricing.ts` returns no data, so every price
+   * element on the site — pricing tables, homepage "from $" cards, the ad
+   * landing pages' price lines and success-screen estimates, the commercial
+   * ballpark and the deposit note — renders nothing, exactly as if the API
+   * were down. Flip to true to publish live ShopFlow prices again; nothing
+   * else needs to change.
+   */
+  publishPrices: false,
+
   /** Canonical origin — used for canonical tags, OG URLs and the sitemap. */
   url: "https://www.evosolution.org",
 
@@ -126,6 +139,24 @@ export const site = {
     },
   },
 
+  /**
+   * PPF claims — NOTHING owner-supplied yet.
+   *
+   * The paid landing page (/ppf) renders a warranty panel ONLY when `warranty`
+   * is a string. The previous site claimed "10-year warranty against yellowing
+   * and cracking" with no document behind it; that stays unpublished until
+   * Angelo sends the HiTek / Impressive Films PPF warranty terms (VERIFY.md).
+   * Fill it in exactly as the manufacturer words it, e.g.
+   *   warranty: "10-year manufacturer warranty against yellowing, cracking and peeling"
+   * Self-healing is a generic property of the urethane film category and is
+   * described, not quantified — no "heals in X minutes" figure anywhere.
+   */
+  ppfSpecs: {
+    sourcedFrom: null as string | null,
+    sourcedOn: null as string | null,
+    warranty: null as string | null, // {{PPF_WARRANTY_TEXT}}
+  },
+
   serviceArea: {
     primary: "Albuquerque, New Mexico",
     /** Confirmed by Angelo as within normal travel for commercial work. */
@@ -149,7 +180,8 @@ export const site = {
    */
   unverified: {
     /** Tint warranty is owner-confirmed in `tintSpecs`; the coating warranty
-     *  is owner-confirmed in `coatingSpecs`. PPF ("10-year") is still unsourced. */
+     *  is owner-confirmed in `coatingSpecs`. PPF ("10-year") is still unsourced —
+     *  it goes live via `ppfSpecs.warranty` above, never here. */
     warranty: { ppf: null },
     /** Site claimed "certified installers" / "factory-trained". */
     certifications: null,

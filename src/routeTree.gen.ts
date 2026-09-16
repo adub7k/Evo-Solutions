@@ -14,6 +14,7 @@ import { Route as TintLawsNewMexicoRouteImport } from './routes/tint-laws-new-me
 import { Route as TintRouteImport } from './routes/tint'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as QuoteRouteImport } from './routes/quote'
+import { Route as PpfRouteImport } from './routes/ppf'
 import { Route as PaintProtectionFilmRouteImport } from './routes/paint-protection-film'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -48,6 +49,11 @@ const ReviewsRoute = ReviewsRouteImport.update({
 const QuoteRoute = QuoteRouteImport.update({
   id: '/quote',
   path: '/quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PpfRoute = PpfRouteImport.update({
+  id: '/ppf',
+  path: '/ppf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaintProtectionFilmRoute = PaintProtectionFilmRouteImport.update({
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
+  '/ppf': typeof PpfRoute
   '/quote': typeof QuoteRoute
   '/reviews': typeof ReviewsRoute
   '/tint': typeof TintRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
+  '/ppf': typeof PpfRoute
   '/quote': typeof QuoteRoute
   '/reviews': typeof ReviewsRoute
   '/tint': typeof TintRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
+  '/ppf': typeof PpfRoute
   '/quote': typeof QuoteRoute
   '/reviews': typeof ReviewsRoute
   '/tint': typeof TintRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/paint-protection-film'
+    | '/ppf'
     | '/quote'
     | '/reviews'
     | '/tint'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/paint-protection-film'
+    | '/ppf'
     | '/quote'
     | '/reviews'
     | '/tint'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/paint-protection-film'
+    | '/ppf'
     | '/quote'
     | '/reviews'
     | '/tint'
@@ -216,6 +228,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   GalleryRoute: typeof GalleryRoute
   PaintProtectionFilmRoute: typeof PaintProtectionFilmRoute
+  PpfRoute: typeof PpfRoute
   QuoteRoute: typeof QuoteRoute
   ReviewsRoute: typeof ReviewsRoute
   TintRoute: typeof TintRoute
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/quote'
       fullPath: '/quote'
       preLoaderRoute: typeof QuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ppf': {
+      id: '/ppf'
+      path: '/ppf'
+      fullPath: '/ppf'
+      preLoaderRoute: typeof PpfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/paint-protection-film': {
@@ -344,6 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   GalleryRoute: GalleryRoute,
   PaintProtectionFilmRoute: PaintProtectionFilmRoute,
+  PpfRoute: PpfRoute,
   QuoteRoute: QuoteRoute,
   ReviewsRoute: ReviewsRoute,
   TintRoute: TintRoute,

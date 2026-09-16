@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Check, MapPin, Phone, ShieldCheck, Star, X } from "lucide-react";
 
+import { LandingHeader, OfferBar, StickyBar } from "@/components/site/LandingChrome";
 import { LandingLeadForm } from "@/components/site/LandingLeadForm";
 import { Photo } from "@/components/site/Photo";
 import { Reveal } from "@/components/site/Reveal";
@@ -10,6 +11,7 @@ import { site } from "@/config/site";
 import { reviews } from "@/content/reviews";
 import { serviceBySlug } from "@/content/services";
 import { trackLandingView, trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
+import { useChannel, type ChannelPhone } from "@/lib/channel";
 import {
   money,
   startingAt,
@@ -19,7 +21,6 @@ import {
   type TintTier,
 } from "@/lib/pricing";
 import { useShopGallery, useSiteImage } from "@/lib/shopGallery";
-import { useScrolledPast } from "@/lib/useScrolledPast";
 
 /**
  * /tint — the paid-social landing page.
@@ -47,50 +48,6 @@ const DESC =
 
 const TINT = serviceBySlug("window-tint");
 const specs = site.tintSpecs;
-
-/* ============================================================== channels == */
-
-type ChannelPhone = { display: string; href: string };
-
-/**
- * Per-channel config — the only knobs this page's ad campaigns should ever
- * need. `?src=google` / `?src=meta` on the ad's final URL picks the row; no
- * parameter (or an unconfigured row) falls back to the shop's real number.
- *
- * Tracking numbers don't exist yet — the Twilio call-tracking build is still
- * pending — so both are null placeholders:
- *   google: {{GOOGLE_TRACKING_NUMBER}}  e.g. { display: "(505) 555-0100", href: "tel:+15055550100" }
- *   meta:   {{META_TRACKING_NUMBER}}
- */
-const CHANNEL = {
-  phones: {
-    default: { display: site.business.phone, href: site.business.phoneHref } as ChannelPhone,
-    google: null as ChannelPhone | null,
-    meta: null as ChannelPhone | null,
-  },
-  /**
-   * Meta offer bar. The Meta creatives carry the offer, so ?src=meta has to
-   * confirm it on landing — and Google traffic, which has no offer context,
-   * must never see it. Empty string = the bar never renders. Set it ONLY once
-   * Angelo confirms he'll honor the offer (this site publishes no unverified
-   * commitments): e.g. "Free windshield strip with any full vehicle tint".
-   */
-  metaOffer: "", // {{META_OFFER_TEXT}}
-};
-
-function useChannel(): { phone: ChannelPhone; offer: string | null } {
-  // Read post-mount: query strings don't change the server HTML, and the
-  // first client render has to match it.
-  const [src, setSrc] = useState<"google" | "meta" | null>(null);
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search).get("src");
-    if (p === "google" || p === "meta") setSrc(p);
-  }, []);
-  return {
-    phone: (src ? CHANNEL.phones[src] : null) ?? CHANNEL.phones.default,
-    offer: src === "meta" && CHANNEL.metaOffer ? CHANNEL.metaOffer : null,
-  };
-}
 
 /**
  * Share card for this page only.
@@ -185,72 +142,8 @@ function TintLanding() {
         <Objections />
         <Close presetTier={presetTier} phone={phone} />
       </main>
-      <StickyBar phone={phone} />
+      <StickyBar phone={phone} cta="Get My Tint Price" service="Window tint" />
     </div>
-  );
-}
-
-/**
- * The Meta offer bar. Confirms the offer the ad promised — nothing more — and
- * dismisses for the pageview. Existing tokens only: accent-soft wash on the
- * page background, standard borders.
- */
-function OfferBar({ text, onDismiss }: { text: string; onDismiss: () => void }) {
-  return (
-    <div className="border-b border-border bg-accent-soft">
-      <div className="container-x flex items-center justify-between gap-3 py-2.5">
-        <p className="text-sm">
-          <span className="font-semibold text-accent">Meta offer:</span> {text}
-        </p>
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Dismiss offer"
-          className="tap-target shrink-0 text-muted-foreground hover:text-foreground"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================ header == */
-
-/**
- * A logo and a phone number. No navigation — there is nowhere else to go, by
- * design. The phone number is the one competing call to action, and it earns
- * its place: on paid mobile traffic a call is worth more than a form fill.
- */
-function LandingHeader({ phone }: { phone: ChannelPhone }) {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
-      <div className="container-x flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <img
-            src="/img/evo-solutions-mark-512.png"
-            alt=""
-            width={32}
-            height={32}
-            className="h-8 w-8"
-          />
-          <span className="font-display text-base font-bold tracking-tight">
-            {site.business.name}
-          </span>
-        </div>
-        {/* The number itself, at every width. Search visitors comparing three
-            shops call the one whose number they can see — "Call" hides the
-            fact that satisfies them fastest. */}
-        <a
-          href={phone.href}
-          onClick={() => trackPhoneClick("landing-header")}
-          className="tap-target gap-2 whitespace-nowrap font-display text-sm font-semibold text-accent sm:text-base"
-        >
-          <Phone className="h-4 w-4" />
-          {phone.display}
-        </a>
-      </div>
-    </header>
   );
 }
 
@@ -405,7 +298,7 @@ function HeroWithForm({
             scroll to find the thing the ad promised. On mobile it follows
             immediately, which tests better than a form buried below proof. */}
         <div className="lg:pt-6">
-          <LandingLeadForm presetTier={presetTier} phone={phone} />
+          <LandingLeadForm preset={presetTier} phone={phone} />
         </div>
       </div>
     </section>
@@ -907,7 +800,7 @@ function Close({ presetTier, phone }: { presetTier: TintTier | null; phone: Chan
             {/* A second live form rather than a link back up the page — on a
                 long page, scrolling someone 4,000px to a form they already
                 passed is where leads die. Both post to the same place. */}
-            <LandingLeadForm id="quote-close" presetTier={presetTier} phone={phone} />
+            <LandingLeadForm id="quote-close" preset={presetTier} phone={phone} />
           </Reveal>
         </div>
 
@@ -918,75 +811,5 @@ function Close({ presetTier, phone }: { presetTier: TintTier | null; phone: Chan
         </p>
       </div>
     </section>
-  );
-}
-
-/* ============================================================ sticky bar == */
-
-/**
- * The phone-only action bar. It stays hidden until the hero's own buttons are
- * behind the visitor, and hides again whenever either form is on screen —
- * pointing at something someone is already looking at just costs them a tap
- * target at the bottom of the page.
- */
-function StickyBar({ phone }: { phone: ChannelPhone }) {
-  const { past, sentinel } = useScrolledPast("70vh");
-  const [formInView, setFormInView] = useState(false);
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    const targets = ["quote", "quote-close"]
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => !!el);
-    if (!targets.length) return;
-
-    const seen = new Set<Element>();
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) seen.add(e.target);
-          else seen.delete(e.target);
-        }
-        setFormInView(seen.size > 0);
-      },
-      { threshold: 0 },
-    );
-    targets.forEach((t) => io.observe(t));
-    return () => io.disconnect();
-  }, []);
-
-  const shown = past && !formInView;
-
-  return (
-    <>
-      {sentinel}
-      <div
-        aria-hidden={!shown}
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm transition-transform duration-300 ease-out lg:hidden ${
-          shown ? "translate-y-0" : "translate-y-full"
-        }`}
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="flex gap-2 px-4 py-2.5">
-          <a
-            href={phone.href}
-            onClick={() => trackPhoneClick("landing-sticky")}
-            tabIndex={shown ? undefined : -1}
-            className="btn btn-ghost flex-1"
-          >
-            <Phone className="h-4 w-4" />
-            Call
-          </a>
-          <a
-            href="#quote-close"
-            onClick={() => trackQuoteClick("landing-sticky", "Window tint")}
-            tabIndex={shown ? undefined : -1}
-            className="btn btn-primary flex-[1.4]"
-          >
-            Get My Tint Price
-          </a>
-        </div>
-      </div>
-    </>
   );
 }

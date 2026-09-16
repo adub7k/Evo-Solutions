@@ -239,7 +239,7 @@ export const guides: Guide[] = [
     title: "What actually drives the cost of window tint in Albuquerque",
     navTitle: "What tint costs (and why)",
     description:
-      "Our tint prices are published on the window tint page. Here's what sits behind those numbers, and how to compare two quotes fairly when they're hundreds apart.",
+      "We quote a flat number for your specific car rather than publishing a price list. Here's what sits behind that number, and how to compare two quotes fairly when they're hundreds apart.",
     date: "2026-08-12",
     minutes: 6,
     category: "Window Tint",
