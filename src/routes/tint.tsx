@@ -278,20 +278,10 @@ function HeroWithForm({
             <span>Walk-ins welcome Mon–Sat</span>
           </div>
 
-          {/* The three objections that stop a cold visitor from filling the
-              form, answered before they scroll far enough to have them. */}
-          <ul className="mt-8 max-w-lg space-y-3 border-t border-border pt-7">
-            {[
-              "Both tiers block 99% of harmful UV — the part that cracks dashboards and fades leather.",
-              "Ceramic rejects up to 65% of the heat. Carbon rejects 20%. Neither ever turns purple.",
-              "Installed in our own bay, and warrantied for life against bubbling, peeling and colour change.",
-            ].map((line) => (
-              <li key={line} className="flex gap-3 text-[0.9375rem] leading-relaxed">
-                <Check className="mt-1 h-4 w-4 shrink-0 text-accent" strokeWidth={2.5} />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
+          {/* Three reasons to believe, answered before the visitor scrolls. On
+              phones they sit under the form instead: a paid mobile click
+              should reach the form in one thumb-scroll, not three. */}
+          <HeroPoints className="mt-8 hidden border-t border-border pt-7 lg:block" />
         </div>
 
         {/* On desktop the form sits beside the headline — nobody should have to
@@ -299,9 +289,29 @@ function HeroWithForm({
             immediately, which tests better than a form buried below proof. */}
         <div className="lg:pt-6">
           <LandingLeadForm preset={presetTier} phone={phone} />
+          <HeroPoints className="mt-8 lg:hidden" />
         </div>
       </div>
     </section>
+  );
+}
+
+const TINT_POINTS = [
+  "Both tiers block 99% of harmful UV — the part that cracks dashboards and fades leather.",
+  "Ceramic rejects up to 65% of the heat. Carbon rejects 20%. Neither ever turns purple.",
+  "Installed in our own bay, and warrantied for life against bubbling, peeling and colour change.",
+];
+
+function HeroPoints({ className = "" }: { className?: string }) {
+  return (
+    <ul className={`max-w-lg space-y-3 ${className}`}>
+      {TINT_POINTS.map((line) => (
+        <li key={line} className="flex gap-3 text-[0.9375rem] leading-relaxed">
+          <Check className="mt-1 h-4 w-4 shrink-0 text-accent" strokeWidth={2.5} />
+          <span>{line}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -641,7 +651,9 @@ function Proof() {
     <section className="section-y-tight cv-auto border-t border-border">
       <div className="container-x">
         <Reveal>
-          <p className="eyebrow">18 reviews, 5.0 stars</p>
+          <p className="eyebrow">
+            {site.reviews.count} reviews, {site.reviews.rating.toFixed(1)} stars
+          </p>
           <h2 className="mt-3 max-w-3xl">Albuquerque drivers, in their own words.</h2>
           <p className="mt-4 max-w-2xl text-muted-foreground">
             {site.business.name} traded as {site.business.formerName} until the 2026 rebrand — same

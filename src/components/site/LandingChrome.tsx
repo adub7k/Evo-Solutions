@@ -11,7 +11,8 @@ import { useScrolledPast } from "@/lib/useScrolledPast";
  * The chrome every paid landing page shares: a header that is only a logo and
  * a phone number, the mobile action bar, and the Meta offer bar. Pages own
  * their copy and sections; this file owns the two pieces that must behave
- * identically on /tint and /ppf so a fix on one can't be forgotten on the other.
+ * identically on /tint, /ppf and /ceramic so a fix on one can't be forgotten
+ * on the others.
  */
 
 /* ================================================================ header == */
@@ -106,7 +107,7 @@ export function StickyBar({
   service: string;
   formIds?: string[];
 }) {
-  const { past, sentinel } = useScrolledPast("70vh");
+  const { past, sentinel } = useScrolledPast("45vh");
   const [formInView, setFormInView] = useState(false);
 
   useEffect(() => {

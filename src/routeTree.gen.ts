@@ -20,6 +20,7 @@ import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommercialWindowTintRouteImport } from './routes/commercial-window-tint'
 import { Route as CeramicCoatingRouteImport } from './routes/ceramic-coating'
+import { Route as CeramicRouteImport } from './routes/ceramic'
 import { Route as AutoDetailingRouteImport } from './routes/auto-detailing'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -81,6 +82,11 @@ const CeramicCoatingRoute = CeramicCoatingRouteImport.update({
   path: '/ceramic-coating',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CeramicRoute = CeramicRouteImport.update({
+  id: '/ceramic',
+  path: '/ceramic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AutoDetailingRoute = AutoDetailingRouteImport.update({
   id: '/auto-detailing',
   path: '/auto-detailing',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auto-detailing': typeof AutoDetailingRoute
+  '/ceramic': typeof CeramicRoute
   '/ceramic-coating': typeof CeramicCoatingRoute
   '/commercial-window-tint': typeof CommercialWindowTintRoute
   '/contact': typeof ContactRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auto-detailing': typeof AutoDetailingRoute
+  '/ceramic': typeof CeramicRoute
   '/ceramic-coating': typeof CeramicCoatingRoute
   '/commercial-window-tint': typeof CommercialWindowTintRoute
   '/contact': typeof ContactRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auto-detailing': typeof AutoDetailingRoute
+  '/ceramic': typeof CeramicRoute
   '/ceramic-coating': typeof CeramicCoatingRoute
   '/commercial-window-tint': typeof CommercialWindowTintRoute
   '/contact': typeof ContactRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auto-detailing'
+    | '/ceramic'
     | '/ceramic-coating'
     | '/commercial-window-tint'
     | '/contact'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auto-detailing'
+    | '/ceramic'
     | '/ceramic-coating'
     | '/commercial-window-tint'
     | '/contact'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auto-detailing'
+    | '/ceramic'
     | '/ceramic-coating'
     | '/commercial-window-tint'
     | '/contact'
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AutoDetailingRoute: typeof AutoDetailingRoute
+  CeramicRoute: typeof CeramicRoute
   CeramicCoatingRoute: typeof CeramicCoatingRoute
   CommercialWindowTintRoute: typeof CommercialWindowTintRoute
   ContactRoute: typeof ContactRoute
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CeramicCoatingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ceramic': {
+      id: '/ceramic'
+      path: '/ceramic'
+      fullPath: '/ceramic'
+      preLoaderRoute: typeof CeramicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auto-detailing': {
       id: '/auto-detailing'
       path: '/auto-detailing'
@@ -359,6 +379,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AutoDetailingRoute: AutoDetailingRoute,
+  CeramicRoute: CeramicRoute,
   CeramicCoatingRoute: CeramicCoatingRoute,
   CommercialWindowTintRoute: CommercialWindowTintRoute,
   ContactRoute: ContactRoute,

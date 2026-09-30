@@ -281,20 +281,10 @@ function HeroWithForm({
             <span>Walk-ins welcome Mon–Sat</span>
           </div>
 
-          {/* The three things a cold visitor needs to believe before the form
-              is worth filling in — answered before they scroll. */}
-          <ul className="mt-8 max-w-lg space-y-3 border-t border-border pt-7">
-            {[
-              "Thick urethane takes the stone instead of your clear coat. That's the whole product in one sentence.",
-              "Light scratches and swirls in the film close back up with heat — a hot Albuquerque afternoon does it.",
-              "Comes off years later leaving factory paint. Original paint is what an appraiser pays for.",
-            ].map((line) => (
-              <li key={line} className="flex gap-3 text-[0.9375rem] leading-relaxed">
-                <Check className="mt-1 h-4 w-4 shrink-0 text-accent" strokeWidth={2.5} />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
+          {/* Three reasons to believe, answered before the visitor scrolls. On
+              phones they sit under the form instead: a paid mobile click
+              should reach the form in one thumb-scroll, not three. */}
+          <HeroPoints className="mt-8 hidden border-t border-border pt-7 lg:block" />
         </div>
 
         {/* On desktop the form sits beside the headline — nobody should have to
@@ -302,9 +292,29 @@ function HeroWithForm({
             immediately. */}
         <div className="lg:pt-6">
           <LandingLeadForm {...form} />
+          <HeroPoints className="mt-8 lg:hidden" />
         </div>
       </div>
     </section>
+  );
+}
+
+const PPF_POINTS = [
+  "Thick urethane takes the stone instead of your clear coat. That's the whole product in one sentence.",
+  "Light scratches and swirls in the film close back up with heat — a hot Albuquerque afternoon does it.",
+  "Comes off years later leaving factory paint. Original paint is what an appraiser pays for.",
+];
+
+function HeroPoints({ className = "" }: { className?: string }) {
+  return (
+    <ul className={`max-w-lg space-y-3 ${className}`}>
+      {PPF_POINTS.map((line) => (
+        <li key={line} className="flex gap-3 text-[0.9375rem] leading-relaxed">
+          <Check className="mt-1 h-4 w-4 shrink-0 text-accent" strokeWidth={2.5} />
+          <span>{line}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

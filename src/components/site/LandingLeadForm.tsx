@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowRight, Check, Loader2, Phone, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Camera,
+  Check,
+  Loader2,
+  Phone,
+  ShieldCheck,
+} from "lucide-react";
 
 import { site } from "@/config/site";
-import { optionKey, tintLanding, type LandingVariant } from "@/content/landing";
+import { carName, optionKey, tintLanding, type LandingVariant } from "@/content/landing";
 import {
   captureAttribution,
   isValidEmail,
   isValidPhone,
   isValidYear,
   submitLead,
+  uploadPhotos,
 } from "@/lib/leads";
 import {
   trackLeadCaptured,
@@ -17,29 +26,30 @@ import {
   trackQuoteComplete,
   trackQuoteError,
   trackQuoteStart,
+  trackQuoteStep,
 } from "@/lib/analytics";
 import { money, usePricing } from "@/lib/pricing";
 
 /**
- * The paid-traffic lead form, shared by /tint and /ppf.
+ * The paid-traffic lead form, shared by /tint, /ppf and /ceramic.
  *
  * This is deliberately NOT the five-step /quote flow. That flow is right for
  * someone who arrived via search and is already reading about film; a visitor
- * who tapped an ad mid-scroll will not sit through five screens. Everything
- * here is on one card, in one scroll, with one button.
+ * who tapped an ad mid-scroll will not sit through five screens.
  *
- * What it asks for and why:
- *   • Name + mobile — the only things the ShopFlow API actually requires, and
- *     the only things Angelo needs to text a price back.
- *   • Year / make / model / colour — required by the shop's own lead settings
- *     (customFields, all four flagged required). A lead without them is
- *     rejected server-side, so they can't be trimmed away for conversion's
- *     sake; they're laid out as one compact row instead.
- *   • One qualifying choice (film tier / coverage) and one concern — optional
- *     chips, pre-answered with "not sure", so a visitor can submit without
- *     touching them but a decisive one qualifies themselves.
- *   • Email — optional. The server doesn't need it and every extra required
- *     field on paid traffic costs leads.
+ * Two short steps, contact first:
+ *   1. One qualifying chip + name + mobile. That is everything Angelo needs to
+ *      text a price back, so the lead is POSTED the moment it validates and
+ *      the ad conversions fire then. A visitor who bails on step 2 is still a
+ *      lead in ShopFlow, not a lost session.
+ *   2. Vehicle, one "what's bothering you" chip, optional email (and photos on
+ *      /ceramic). Posted again on submit — ShopFlow dedupes by phone and
+ *      merges, and alerts the owner once. Skippable: "just text me" goes
+ *      straight to the success screen, because the lead already exists.
+ *
+ * Step 1 posts with skipRequiredCustomFields (the vehicle hasn't been asked
+ * yet); step 2 posts without it, so a completed form still meets the shop's
+ * year/make/model rule. Colour is optional — the server never requires it.
  *
  * Everything that differs per page — copy, chips, the success-screen estimate
  * — is a `LandingVariant` from content/landing.ts. Copy rule inherited from
@@ -57,6 +67,7 @@ type Data = {
   color: string;
   choice: string;
   concern: string;
+  photos: File[];
   honeypot: string;
 };
 
@@ -70,14 +81,32 @@ const initialFor = (v: LandingVariant): Data => ({
   color: "",
   choice: v.choice.initial,
   concern: "",
+  photos: [],
   honeypot: "",
 });
 
-type Errors = Partial<
-  Record<"name" | "phone" | "email" | "year" | "make" | "model" | "color", string>
->;
+type Errors = Partial<Record<"name" | "phone" | "email" | "year" | "make" | "model", string>>;
 
-export function LandingLeadForm({
+type Stage = "contact" | "details" | "done";
+
+type FormProps = Parameters<typeof FormStages>[0];
+
+/**
+ * The anchor (#quote / #quote-close) lives on a wrapper that never unmounts.
+ * The card inside swaps element three times (contact → details → done), and
+ * anything holding a reference to the old node — the sticky bar's
+ * IntersectionObserver, an in-page anchor — would otherwise lose it.
+ */
+export function LandingLeadForm(props: FormProps) {
+  const id = props.id ?? "quote";
+  return (
+    <div id={id} className="scroll-mt-24">
+      <FormStages {...props} id={id} />
+    </div>
+  );
+}
+
+function FormStages({
   id = "quote",
   variant = tintLanding,
   preset = null,
@@ -104,13 +133,13 @@ export function LandingLeadForm({
   const pricing = usePricing();
   const [data, setData] = useState<Data>(() => initialFor(variant));
   const [errors, setErrors] = useState<Errors>({});
+  const [stage, setStage] = useState<Stage>("contact");
   const [sending, setSending] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const startedRef = useRef(false);
   const leadSentFor = useRef<string | null>(null);
-  const successRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
 
   // First-touch ad attribution (utm_*, fbclid, gclid) is stashed on mount so a
   // visitor who scrolls the whole page before filling anything in still gets
@@ -129,6 +158,12 @@ export function LandingLeadForm({
     if (chip) setData((d) => ({ ...d, choice: chip }));
   }, [preset, presetKey, variant]);
 
+  // Each stage change moves focus to the new card's heading, so keyboard and
+  // screen-reader users land on the thing that just appeared.
+  useEffect(() => {
+    if (stage !== "contact") requestAnimationFrame(() => stageRef.current?.focus());
+  }, [stage]);
+
   const set = <K extends keyof Data>(k: K, v: Data[K]) => {
     if (!startedRef.current) {
       startedRef.current = true;
@@ -138,68 +173,52 @@ export function LandingLeadForm({
     setErrors((e) => (k in e ? { ...e, [k]: undefined } : e));
   };
 
-  const validate = (): boolean => {
+  const baseLead = () => ({
+    name: data.name,
+    phone: data.phone,
+    service: variant.service,
+    serviceTag: variant.leadValue,
+    timeline: "",
+    notes: "",
+    honeypot: data.honeypot,
+  });
+
+  /* ------------------------------------------------------ step 1: contact -- */
+  const submitContact = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (sending) return;
     const e: Errors = {};
     if (data.name.trim().length < 2) e.name = "Please enter your name";
     if (!isValidPhone(data.phone)) e.phone = "Enter a valid 10-digit mobile number";
-    if (data.email.trim() && !isValidEmail(data.email)) e.email = "That email doesn't look right";
-    if (!isValidYear(data.year)) e.year = "4-digit year";
-    if (data.make.trim().length < 2) e.make = "Required";
-    if (data.model.trim().length < 1) e.model = "Required";
-    if (data.color.trim().length < 1) e.color = "Required";
     setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const submit = async (ev: React.FormEvent) => {
-    ev.preventDefault();
-    if (sending) return;
-    if (!validate()) return;
+    if (Object.keys(e).length) return;
 
     setSending(true);
     setSubmitError(null);
 
-    // Conversions fire the moment we have a valid lead, once per phone number,
-    // rather than on the success screen — a visitor who closes the tab while
-    // the request is in flight is still a lead in ShopFlow.
+    // Conversions fire the moment we have a valid lead, once per phone number
+    // — a visitor who closes the tab while the request is in flight is still
+    // a lead in ShopFlow.
     if (leadSentFor.current !== data.phone) {
       leadSentFor.current = data.phone;
-      // Tier + vehicle ride along so ad platforms can optimise toward the
-      // leads that are actually worth the most (ceramic, larger vehicles).
-      trackLeadCaptured(variant.leadValue, {
-        [variant.choice.param]: data.choice,
-        vehicle_year: data.year,
-        vehicle_make: data.make,
-        vehicle_model: data.model,
-      });
+      trackLeadCaptured(variant.leadValue, { [variant.choice.param]: data.choice });
       trackQuoteAdsConversion();
     }
 
     const res = await submitLead({
-      name: data.name,
-      phone: data.phone,
-      email: data.email,
-      service: variant.service,
-      serviceTag: variant.leadValue,
-      goal: data.concern,
-      timeline: "",
-      notes: "",
+      ...baseLead(),
+      email: "",
+      goal: "",
       extraLines: [`${variant.choice.noteLabel}: ${data.choice}`, variant.sourceLine],
-      vehicle: {
-        year: data.year,
-        make: data.make,
-        model: data.model,
-        color: data.color,
-        type: "",
-      },
-      honeypot: data.honeypot,
+      vehicle: { year: "", make: "", model: "", color: "", type: "" },
+      // The vehicle is step 2's question. Name + phone are still enforced.
+      skipRequiredCustomFields: true,
     });
 
     setSending(false);
     if (res.ok) {
-      setSubmitted(true);
-      trackQuoteComplete(variant.leadValue);
-      requestAnimationFrame(() => successRef.current?.focus());
+      trackQuoteStep(1, "Contact", variant.leadValue);
+      setStage("details");
     } else {
       trackQuoteError(res.error || "unknown");
       setSubmitError(
@@ -210,8 +229,65 @@ export function LandingLeadForm({
     }
   };
 
+  /* ------------------------------------------------------ step 2: details -- */
+  const submitDetails = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (sending) return;
+    const e: Errors = {};
+    if (!isValidYear(data.year)) e.year = "4-digit year";
+    if (data.make.trim().length < 2) e.make = "Required";
+    if (data.model.trim().length < 1) e.model = "Required";
+    if (data.email.trim() && !isValidEmail(data.email)) e.email = "That email doesn't look right";
+    setErrors(e);
+    if (Object.keys(e).length) return;
+
+    setSending(true);
+    setSubmitError(null);
+
+    // Photos are best-effort: a failed upload never blocks the lead.
+    const photoUrls = data.photos.length ? await uploadPhotos(data.photos) : [];
+
+    // Tier + vehicle ride along so ad platforms can optimise toward the leads
+    // that are actually worth the most (ceramic, larger vehicles). Not a
+    // second conversion — generate_lead already fired on step 1.
+    trackQuoteStep(2, "Vehicle", variant.leadValue);
+
+    const res = await submitLead({
+      ...baseLead(),
+      email: data.email,
+      goal: data.concern,
+      extraLines: [`${variant.choice.noteLabel}: ${data.choice}`, variant.sourceLine],
+      vehicle: {
+        year: data.year,
+        make: data.make,
+        model: data.model,
+        color: data.color,
+        type: "",
+      },
+      photoUrls,
+    });
+
+    setSending(false);
+    if (res.ok) {
+      finish();
+    } else {
+      trackQuoteError(res.error || "unknown");
+      setSubmitError(
+        "That didn't go through — but we already have your number, so you'll still hear from us. Try again, or skip and we'll ask by text.",
+      );
+    }
+  };
+
+  const finish = () => {
+    trackQuoteComplete(variant.leadValue);
+    setStage("done");
+  };
+
+  const firstName = data.name.trim().split(" ")[0];
+  const hasVehicle = !!(data.year && data.make && data.model);
+
   /* ------------------------------------------------------------ success -- */
-  if (submitted) {
+  if (stage === "done") {
     // The CTA promised a price, so the success screen shows one — a live
     // range from ShopFlow for what was chosen, clearly an estimate until the
     // shop confirms the flat number by text. No data → no estimate block; the
@@ -222,8 +298,7 @@ export function LandingLeadForm({
 
     return (
       <div
-        id={id}
-        ref={successRef}
+        ref={stageRef}
         tabIndex={-1}
         role="status"
         aria-live="polite"
@@ -235,7 +310,7 @@ export function LandingLeadForm({
             <Check className="h-7 w-7 text-accent-foreground" strokeWidth={2.5} />
           </div>
           <h2 className="mt-6 font-display text-[clamp(1.6rem,4vw,2.1rem)]">
-            Got it, {data.name.trim().split(" ")[0]}.
+            Got it, {firstName}.
           </h2>
 
           {est && (
@@ -251,9 +326,16 @@ export function LandingLeadForm({
           )}
 
           <p className="mx-auto mt-5 max-w-sm text-muted-foreground">
-            {variant.successNote(data.choice, vehicle)}
+            {hasVehicle
+              ? variant.successNote(data.choice, vehicle)
+              : "We'll text you shortly to ask what you drive, then send your flat price — usually the same day during shop hours."}
           </p>
-          <a href={shopPhone.href} className="btn btn-primary btn-lg mt-6" data-cta="success-call">
+          <a
+            href={shopPhone.href}
+            onClick={() => trackPhoneClick("landing-success")}
+            className="btn btn-primary btn-lg mt-6"
+            data-cta="success-call"
+          >
             <Phone className="h-4 w-4" />
             Call now to book — {shopPhone.display}
           </a>
@@ -265,32 +347,154 @@ export function LandingLeadForm({
     );
   }
 
-  /* --------------------------------------------------------------- form -- */
-  const choiceChips = (
-    <Chips
-      key="choice"
-      legend={variant.choice.legend}
-      hint={variant.choice.hint}
-      name={fid("choice")}
-      options={variant.choice.options}
-      value={data.choice}
-      onChange={(v) => set("choice", v)}
-    />
+  const errorBox = submitError && (
+    <div
+      role="alert"
+      className="mt-6 flex items-start gap-2.5 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm"
+    >
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+      <div>
+        <p>{submitError}</p>
+        <a
+          href={shopPhone.href}
+          onClick={() => trackPhoneClick("landing-form-error")}
+          className="mt-2 inline-flex items-center gap-1.5 font-medium text-accent"
+        >
+          <Phone className="h-3.5 w-3.5" />
+          {shopPhone.display}
+        </a>
+      </div>
+    </div>
   );
-  const concernChips = (
-    <Chips
-      key="concern"
-      legend={variant.concern.legend}
-      name={fid("concern")}
-      options={variant.concern.options}
-      value={data.concern}
-      onChange={(v) => set("concern", v)}
-    />
-  );
-  const chips = variant.choiceFirst ? [choiceChips, concernChips] : [concernChips, choiceChips];
 
+  const spinner = (
+    <>
+      <Loader2 className="h-4 w-4 animate-spin" />
+      Sending…
+    </>
+  );
+
+  /* ------------------------------------------------------- step 2 form -- */
+  if (stage === "details") {
+    return (
+      <form onSubmit={submitDetails} noValidate className="panel p-5 sm:p-7">
+        <div ref={stageRef} tabIndex={-1} className="outline-none">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-accent">
+            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            Step 1 done — we have your number
+          </p>
+          <h2 className="mt-3 font-display text-[clamp(1.35rem,2.6vw,1.75rem)]">
+            {firstName}, what are we pricing?
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {variant.details.intro}
+          </p>
+        </div>
+
+        <div className="mt-6 space-y-6">
+          <fieldset>
+            <legend className="mb-3 font-display text-[0.9375rem] font-semibold">
+              Your vehicle
+            </legend>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Input
+                idPrefix={id}
+                label="Year"
+                value={data.year}
+                onChange={(v) => set("year", v)}
+                error={errors.year}
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={4}
+                placeholder="2021"
+              />
+              <Input
+                idPrefix={id}
+                label="Make"
+                value={data.make}
+                onChange={(v) => set("make", v)}
+                error={errors.make}
+                placeholder="Toyota"
+              />
+              <Input
+                idPrefix={id}
+                label="Model"
+                value={data.model}
+                onChange={(v) => set("model", v)}
+                error={errors.model}
+                placeholder="Camry"
+              />
+              <Input
+                idPrefix={id}
+                label="Color (optional)"
+                value={data.color}
+                onChange={(v) => set("color", v)}
+                placeholder="Blue"
+              />
+            </div>
+          </fieldset>
+
+          <Chips
+            legend={variant.concern.legend}
+            name={fid("concern")}
+            options={variant.concern.options}
+            value={data.concern}
+            onChange={(v) => set("concern", v)}
+          />
+
+          {variant.details.photos && (
+            <PhotoPicker
+              id={fid("photos")}
+              hint={variant.details.photos}
+              files={data.photos}
+              onChange={(files) => set("photos", files)}
+            />
+          )}
+
+          <Input
+            idPrefix={id}
+            label="Email (optional)"
+            value={data.email}
+            onChange={(v) => set("email", v)}
+            error={errors.email}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+          />
+        </div>
+
+        {errorBox}
+
+        <div className="mt-7 flex flex-col gap-3">
+          <button type="submit" disabled={sending} className="btn btn-primary btn-lg w-full">
+            {sending ? (
+              spinner
+            ) : (
+              <>
+                {variant.details.cta}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            disabled={sending}
+            onClick={() => {
+              trackQuoteStep(2, "Skipped vehicle", variant.leadValue);
+              finish();
+            }}
+            className="text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            Skip — just text me
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  /* ------------------------------------------------------- step 1 form -- */
   return (
-    <form id={id} onSubmit={submit} noValidate className="panel scroll-mt-24 p-5 sm:p-7">
+    <form onSubmit={submitContact} noValidate className="panel p-5 sm:p-7">
       <h2 className="font-display text-[clamp(1.35rem,2.6vw,1.75rem)]">{variant.form.heading}</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{variant.form.intro}</p>
       <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
@@ -307,54 +511,20 @@ export function LandingLeadForm({
       </p>
 
       <div className="mt-6 space-y-6">
-        {chips}
-
-        <fieldset>
-          <legend className="mb-3 font-display text-[0.9375rem] font-semibold">Your vehicle</legend>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Input
-              idPrefix={id}
-              label="Year"
-              value={data.year}
-              onChange={(v) => set("year", v)}
-              error={errors.year}
-              inputMode="numeric"
-              autoComplete="off"
-              maxLength={4}
-              placeholder="2021"
-            />
-            <Input
-              idPrefix={id}
-              label="Make"
-              value={data.make}
-              onChange={(v) => set("make", v)}
-              error={errors.make}
-              placeholder="Toyota"
-            />
-            <Input
-              idPrefix={id}
-              label="Model"
-              value={data.model}
-              onChange={(v) => set("model", v)}
-              error={errors.model}
-              placeholder="Camry"
-            />
-            <Input
-              idPrefix={id}
-              label="Color"
-              value={data.color}
-              onChange={(v) => set("color", v)}
-              error={errors.color}
-              placeholder="Blue"
-            />
-          </div>
-        </fieldset>
+        <Chips
+          legend={variant.choice.legend}
+          hint={variant.choice.hint}
+          name={fid("choice")}
+          options={variant.choice.options}
+          value={data.choice}
+          onChange={(v) => set("choice", v)}
+        />
 
         <fieldset>
           <legend className="mb-3 font-display text-[0.9375rem] font-semibold">
             Where do we send it?
           </legend>
-          <div className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Input
               idPrefix={id}
               label="Your name"
@@ -374,16 +544,6 @@ export function LandingLeadForm({
               autoComplete="tel"
               hint={variant.form.phoneHint}
             />
-            <Input
-              idPrefix={id}
-              label="Email (optional)"
-              value={data.email}
-              onChange={(v) => set("email", v)}
-              error={errors.email}
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-            />
           </div>
         </fieldset>
 
@@ -401,24 +561,7 @@ export function LandingLeadForm({
         </div>
       </div>
 
-      {submitError && (
-        <div
-          role="alert"
-          className="mt-6 flex items-start gap-2.5 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm"
-        >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-          <div>
-            <p>{submitError}</p>
-            <a
-              href={shopPhone.href}
-              className="mt-2 inline-flex items-center gap-1.5 font-medium text-accent"
-            >
-              <Phone className="h-3.5 w-3.5" />
-              {shopPhone.display}
-            </a>
-          </div>
-        </div>
-      )}
+      {errorBox}
 
       {/* Submit, then click-to-call directly under it. A visitor who has got
           this far and would rather talk gets the number right here, not back
@@ -427,10 +570,7 @@ export function LandingLeadForm({
       <div className="mt-7 flex flex-col gap-3">
         <button type="submit" disabled={sending} className="btn btn-primary btn-lg w-full">
           {sending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Sending…
-            </>
+            spinner
           ) : (
             <>
               {variant.form.cta}
@@ -562,6 +702,50 @@ function Input({
           {hint}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Optional photo attach (/ceramic). Coating quotes turn on paint condition,
+ * so a couple of daylight photos save a round of texts. Up to 3, uploaded on
+ * submit via lib/leads.uploadPhotos; a failed upload never blocks the lead.
+ */
+function PhotoPicker({
+  id,
+  hint,
+  files,
+  onChange,
+}: {
+  id: string;
+  hint: string;
+  files: File[];
+  onChange: (files: File[]) => void;
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="flex cursor-pointer items-center gap-3 rounded-md border border-dashed border-line-strong px-4 py-3.5 text-sm hover:bg-surface-2"
+      >
+        <Camera className="h-5 w-5 shrink-0 text-accent" />
+        <span>
+          <span className="font-semibold">
+            {files.length
+              ? `${files.length} photo${files.length > 1 ? "s" : ""} attached`
+              : "Add photos (optional)"}
+          </span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
+        </span>
+      </label>
+      <input
+        id={id}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        onChange={(e) => onChange(Array.from(e.target.files ?? []).slice(0, 3))}
+      />
     </div>
   );
 }
