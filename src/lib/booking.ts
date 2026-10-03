@@ -195,6 +195,19 @@ export function conflicts(a: BookableService, b: BookableService): boolean {
   return (front(a) && (!!b.sizes || front(b))) || (front(b) && !!a.sizes);
 }
 
+/**
+ * True when a picked service already IS this add-on — e.g. the "Ceramic
+ * Windshield" service and the "Windshield Tint -- Ceramic" extra — so the
+ * extra is hidden instead of letting someone pay for two windshields. Every
+ * word of the service name has to appear in the add-on's name.
+ */
+export function covers(s: BookableService, a: BookingAddOn): boolean {
+  const words = (t: string) => t.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const addon = new Set(words(a.name));
+  const svc = words(s.name);
+  return svc.length > 0 && svc.every((w) => addon.has(w));
+}
+
 export function hoursLabel(min: number): string {
   if (min < 60) return `${min} min`;
   const h = min / 60;

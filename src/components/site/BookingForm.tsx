@@ -20,6 +20,7 @@ import {
   addonsFor,
   book,
   conflicts,
+  covers,
   depositCheckout,
   bookableDays,
   BOOKING_GROUPS,
@@ -141,7 +142,8 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
     : null;
   const extras = selected
     .flatMap((s) => addonsFor(menu, s))
-    .filter((a, i, all) => all.findIndex((b) => b.id === a.id) === i);
+    .filter((a, i, all) => all.findIndex((b) => b.id === a.id) === i)
+    .filter((a) => !selected.some((sv) => covers(sv, a)));
   const chosenExtras = extras.filter((a) => addonIds.includes(a.id));
   const sumFor = (size: string | null) => {
     const prices = selected.map((s) => priceFor(s, size));
@@ -191,10 +193,12 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
           s.id,
         ];
     setServiceIds(next);
+    const picked = menu.services.filter((o) => next.includes(o.id));
     const allowed = new Set(
-      menu.services
-        .filter((o) => next.includes(o.id))
-        .flatMap((o) => addonsFor(menu, o).map((a) => a.id)),
+      picked
+        .flatMap((o) => addonsFor(menu, o))
+        .filter((a) => !picked.some((o) => covers(o, a)))
+        .map((a) => a.id),
     );
     setAddonIds((ids) => ids.filter((x) => allowed.has(x)));
     setErrors((e) => ({ ...e, service: undefined }));
