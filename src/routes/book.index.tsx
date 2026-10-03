@@ -40,7 +40,9 @@ function Book() {
               Pick a time. Hold it with a deposit.
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              Know which film you want? Book it here. Every time shown has room for the whole job.
+              Know which film you want? Book it here. Every time shown has room for the whole job.{" "}
+              Online booking starts {site.booking.minNoticeHours} hours out — need it sooner? Give
+              us a call.
             </p>
             <p className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">

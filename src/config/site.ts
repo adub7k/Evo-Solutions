@@ -76,6 +76,9 @@ export const site = {
   booking: {
     enabled: true,
     services: ["window-tint"] as string[],
+    /** Earliest a job can be booked online, in hours from now (owner call
+     *  2026-10-03: 48). Sooner than that, customers call the shop. */
+    minNoticeHours: 48,
   },
 
   /** Canonical origin — used for canonical tags, OG URLs and the sitemap. */

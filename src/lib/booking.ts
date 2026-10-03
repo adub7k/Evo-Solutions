@@ -194,9 +194,18 @@ export function isoDate(d: Date): string {
 }
 
 /** The next `count` days the shop works (today included), skipping blocked dates. */
+/** Earliest moment a job may start: now + site.booking.minNoticeHours. */
+export function earliestStart(): Date {
+  return new Date(Date.now() + site.booking.minNoticeHours * 3600 * 1000);
+}
+
+/**
+ * The next `count` days the shop works, skipping blocked dates and any day
+ * that ends before the minimum notice runs out (48 hours, owner call).
+ */
 export function bookableDays(menu: BookingMenu, count = 14): Date[] {
   const out: Date[] = [];
-  const d = new Date();
+  const d = new Date(earliestStart());
   d.setHours(12, 0, 0, 0);
   for (let i = 0; out.length < count && i < 60; i++) {
     if (menu.workDays.includes(d.getDay()) && !menu.blockedDates.includes(isoDate(d))) {
@@ -208,8 +217,8 @@ export function bookableDays(menu: BookingMenu, count = 14): Date[] {
 }
 
 /**
- * Open start times for a date. Same-day slots that have already passed are
- * dropped here (ShopFlow only knows dates, not "now"), with an hour's buffer.
+ * Open start times for a date, minus anything inside the minimum-notice
+ * window (ShopFlow only knows dates, not "now", so the cut happens here).
  */
 export async function fetchSlots(dateISO: string, serviceId: string): Promise<string[] | null> {
   try {
@@ -219,9 +228,9 @@ export async function fetchSlots(dateISO: string, serviceId: string): Promise<st
     if (!res.ok) return null;
     const slots = await res.json();
     if (!Array.isArray(slots)) return null;
-    if (dateISO !== isoDate(new Date())) return slots;
-    const cutoff = new Date().getHours() * 60 + new Date().getMinutes() + 60;
-    return slots.filter((t: string) => clockMinutes(t) >= cutoff);
+    const earliest = earliestStart().getTime();
+    const day = new Date(dateISO + "T00:00:00");
+    return slots.filter((t: string) => day.getTime() + clockMinutes(t) * 60000 >= earliest);
   } catch {
     return null;
   }
