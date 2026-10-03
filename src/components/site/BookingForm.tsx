@@ -19,6 +19,7 @@ import { site } from "@/config/site";
 import {
   addonsFor,
   book,
+  conflicts,
   depositCheckout,
   bookableDays,
   BOOKING_GROUPS,
@@ -101,9 +102,12 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
   const id = useId();
   const navigate = useNavigate();
 
-  const [serviceId, setServiceId] = useState<string | null>(
-    () => menu.services.find((s) => preset && optionKey(s.name) === preset)?.id ?? null,
-  );
+  // Several services can share one visit (e.g. front 2 windows + windshield);
+  // conflicting picks replace each other — see conflicts() in lib/booking.
+  const [serviceIds, setServiceIds] = useState<string[]>(() => {
+    const hit = menu.services.find((s) => preset && optionKey(s.name) === preset);
+    return hit ? [hit.id] : [];
+  });
   const [sizeKey, setSizeKey] = useState<string | null>(null);
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [date, setDate] = useState<string | null>(null);
@@ -125,22 +129,39 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
   // details reopens checkout for it rather than booking twice.
   const [unpaid, setUnpaid] = useState<{ id: string; sig: string } | null>(null);
 
-  const service = menu.services.find((s) => s.id === serviceId) ?? null;
-  const extras = service ? addonsFor(menu, service) : [];
+  const selected = menu.services.filter((s) => serviceIds.includes(s.id));
+  // The visit as a whole: what the summary, slots and copy talk about.
+  const service = selected.length
+    ? {
+        name: selected.map((s) => s.name).join(" + "),
+        slug: selected[0].slug,
+        sizes: selected.some((s) => s.sizes),
+        duration: selected.reduce((t, s) => t + s.duration, 0),
+      }
+    : null;
+  const extras = selected
+    .flatMap((s) => addonsFor(menu, s))
+    .filter((a, i, all) => all.findIndex((b) => b.id === a.id) === i);
   const chosenExtras = extras.filter((a) => addonIds.includes(a.id));
-  const base = service ? priceFor(service, sizeKey) : null;
+  const sumFor = (size: string | null) => {
+    const prices = selected.map((s) => priceFor(s, size));
+    return prices.some((p) => p == null) ? null : prices.reduce<number>((t, p) => t + (p ?? 0), 0);
+  };
+  const base = service ? sumFor(sizeKey) : null;
   const total = base == null ? null : base + chosenExtras.reduce((t, a) => t + a.price, 0);
   const deposit = menu.deposit?.amount ?? 0;
   const days = useMemo(() => bookableDays(menu), [menu]);
-  const slotKey = date && service ? `${date}|${service.id}` : null;
+  const slotKey = date && service ? `${date}|${[...serviceIds].sort().join(",")}` : null;
   const daySlots = slotKey ? slots[slotKey] : undefined;
 
   // Slots depend on the job's length, so they're fetched per (date, service).
   useEffect(() => {
     if (!slotKey || slotKey in slots) return;
-    const [d, sid] = slotKey.split("|");
+    const [d, ids] = slotKey.split("|");
     let alive = true;
-    fetchSlots(d, sid).then((list) => alive && setSlots((m) => ({ ...m, [slotKey]: list })));
+    fetchSlots(d, ids.split(",")).then(
+      (list) => alive && setSlots((m) => ({ ...m, [slotKey]: list })),
+    );
     return () => {
       alive = false;
     };
@@ -160,8 +181,22 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
   };
 
   const pickService = (s: BookableService) => {
-    setServiceId(s.id);
-    setAddonIds((ids) => ids.filter((x) => addonsFor(menu, s).some((a) => a.id === x)));
+    const next = serviceIds.includes(s.id)
+      ? serviceIds.filter((x) => x !== s.id)
+      : [
+          ...serviceIds.filter((x) => {
+            const other = menu.services.find((o) => o.id === x);
+            return other && !conflicts(other, s);
+          }),
+          s.id,
+        ];
+    setServiceIds(next);
+    const allowed = new Set(
+      menu.services
+        .filter((o) => next.includes(o.id))
+        .flatMap((o) => addonsFor(menu, o).map((a) => a.id)),
+    );
+    setAddonIds((ids) => ids.filter((x) => allowed.has(x)));
     setErrors((e) => ({ ...e, service: undefined }));
   };
 
@@ -193,7 +228,7 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
     if (!service || !date || !time || total == null) return;
 
     setSending(true);
-    const sig = JSON.stringify([service.id, sizeKey, addonIds, date, time, form]);
+    const sig = JSON.stringify([serviceIds, sizeKey, addonIds, date, time, form]);
     const res: BookResult =
       unpaid && unpaid.sig === sig
         ? await depositCheckout(unpaid.id).then((url) =>
@@ -203,7 +238,7 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
           )
         : await book(
             {
-              service,
+              services: selected,
               sizeKey: service.sizes ? sizeKey : null,
               addonIds,
               date,
@@ -275,6 +310,9 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
       <div className="min-w-0 space-y-6">
         {/* 1 — service */}
         <Section n={1} title="What are we doing?" id={`${id}-sec-service`} error={errors.service}>
+          <p className="-mt-2 mb-5 text-sm text-muted-foreground">
+            Pick one or more — they're done in the same visit.
+          </p>
           <div className="space-y-6">
             {groups.map((slug) => (
               <div key={slug}>
@@ -283,7 +321,7 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
                   {menu.services
                     .filter((s) => s.slug === slug)
                     .map((s) => {
-                      const active = s.id === serviceId;
+                      const active = serviceIds.includes(s.id);
                       const exact = priceFor(s, sizeKey);
                       const max = s.sizes ? Math.max(...Object.values(s.sizes)) : null;
                       return (
@@ -343,7 +381,7 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
               <div className="grid gap-2 sm:grid-cols-3">
                 {menu.sizes.map((sz) => {
                   const active = sz.key === sizeKey;
-                  const p = service?.sizes?.[sz.key];
+                  const p = service?.sizes ? sumFor(sz.key) : null;
                   return (
                     <button
                       type="button"
@@ -571,7 +609,11 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
       <aside className="panel p-5 sm:p-6 lg:sticky lg:top-24">
         <p className="eyebrow">Your booking</p>
         <dl className="mt-4 space-y-3 text-sm">
-          <Row label="Service" value={service?.name} />
+          {selected.length === 0 && <Row label="Service" />}
+          {selected.map((sv) => {
+            const p = priceFor(sv, sizeKey);
+            return <Row key={sv.id} label={sv.name} value={p != null ? money(p) : "pick a size"} />;
+          })}
           {service?.sizes && (
             <Row label="Vehicle size" value={menu.sizes.find((s) => s.key === sizeKey)?.label} />
           )}

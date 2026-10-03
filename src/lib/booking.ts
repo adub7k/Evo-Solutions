@@ -181,6 +181,20 @@ const longFmt = new Intl.DateTimeFormat("en-US", {
 });
 export const formatBookingDate = (iso: string) => longFmt.format(new Date(iso + "T12:00:00"));
 
+/**
+ * Two picks that can't share a visit, so choosing one drops the other: two
+ * full-vehicle jobs (carbon AND ceramic on the whole car), or a full-vehicle
+ * job plus a "front 2 windows" partial — the full job already covers those
+ * windows — or two front partials. Everything else (a windshield with front
+ * windows, say) combines into one appointment.
+ */
+export function conflicts(a: BookableService, b: BookableService): boolean {
+  if (a.id === b.id) return false;
+  const front = (s: BookableService) => !s.sizes && /front/i.test(s.name);
+  if (a.sizes && b.sizes) return true;
+  return (front(a) && (!!b.sizes || front(b))) || (front(b) && !!a.sizes);
+}
+
 export function hoursLabel(min: number): string {
   if (min < 60) return `${min} min`;
   const h = min / 60;
@@ -220,10 +234,12 @@ export function bookableDays(menu: BookingMenu, count = 14): Date[] {
  * Open start times for a date, minus anything inside the minimum-notice
  * window (ShopFlow only knows dates, not "now", so the cut happens here).
  */
-export async function fetchSlots(dateISO: string, serviceId: string): Promise<string[] | null> {
+export async function fetchSlots(dateISO: string, serviceIds: string[]): Promise<string[] | null> {
   try {
     const res = await fetch(
-      publicApi(`/availability?date=${dateISO}&serviceId=${encodeURIComponent(serviceId)}`),
+      publicApi(
+        `/availability?date=${dateISO}&serviceId=${serviceIds.map(encodeURIComponent).join(",")}`,
+      ),
     );
     if (!res.ok) return null;
     const slots = await res.json();
@@ -248,7 +264,8 @@ export function clockMinutes(t: string): number {
 /* ------------------------------------------------------------- booking -- */
 
 export type BookingRequest = {
-  service: BookableService;
+  /** One or more services for the same visit; the first is the primary. */
+  services: BookableService[];
   sizeKey: string | null;
   addonIds: string[];
   date: string;
@@ -315,7 +332,8 @@ export async function book(req: BookingRequest, deposit: number | null): Promise
         customerName: req.name.trim(),
         customerPhone: req.phone.trim(),
         customerEmail: req.email.trim(),
-        serviceId: req.service.id,
+        serviceId: req.services[0].id,
+        serviceIds: req.services.map((s) => s.id),
         vehicleSize: req.sizeKey,
         addons: req.addonIds,
         date: req.date,
