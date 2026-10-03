@@ -42,7 +42,7 @@ export type Pricing = {
  * ShopFlow service categories → the site's service pages. Angelo's tenant uses
  * "exterior" for PPF because the category list predates the film side.
  */
-const CATEGORY_TO_SLUG: Record<string, string> = {
+export const CATEGORY_TO_SLUG: Record<string, string> = {
   tint: "window-tint",
   detail: "auto-detailing",
   coating: "ceramic-coating",
@@ -55,7 +55,7 @@ const CATEGORY_TO_SLUG: Record<string, string> = {
  * that matches nothing simply isn't shown — better a missing extra than one
  * listed under the wrong service. (VERIFY.md tells Angelo how to name them.)
  */
-const ADDON_MATCHERS: [RegExp, string][] = [
+export const ADDON_MATCHERS: [RegExp, string][] = [
   [/windshield|sun\s*roof|moon\s*roof|tint/i, "window-tint"],
   [/pet hair|interior|carpet|shampoo|odou?r|detail/i, "auto-detailing"],
   [/coating|ceramic coat/i, "ceramic-coating"],
@@ -86,7 +86,7 @@ export function fetchPricing(): Promise<Pricing | null> {
  * "Ceramic Coating - Base"). Tidy the ASCII separators for display only — the
  * words themselves are left exactly as Angelo wrote them.
  */
-const tidyName = (n: string) => n.replace(/\s+-{1,2}\s+/g, " — ").trim();
+export const tidyName = (n: string) => n.replace(/\s+-{1,2}\s+/g, " — ").trim();
 
 function normalize(info: Record<string, unknown>): Pricing {
   const sizes = Array.isArray(info.vehicleSizes)

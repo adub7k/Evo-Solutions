@@ -90,6 +90,26 @@ function getAttribution(): Attribution {
   return { utm: {}, referrer: typeof document !== "undefined" ? document.referrer : "" };
 }
 
+/**
+ * The ad trail as note lines, for records that have no utm field of their own
+ * (online bookings) — so a paid booking can still be traced to its click.
+ */
+export function getAttributionLines(): string[] {
+  const { utm, referrer, click, landing } = getAttribution();
+  const utmText = Object.entries(utm ?? {})
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ");
+  const clickIds = Object.entries(click ?? {})
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ");
+  return [
+    utmText && `Ad source: ${utmText}`,
+    landing && landing !== "/" && `Landing page: ${landing}`,
+    clickIds && `Ad click: ${clickIds}`,
+    !utmText && referrer && `Referrer: ${referrer}`,
+  ].filter(Boolean) as string[];
+}
+
 /* ---------------- API calls ---------------- */
 
 export type LeadInput = {

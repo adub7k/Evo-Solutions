@@ -108,6 +108,28 @@ export function trackLandingView(service: string): void {
   fbqEvent("ViewContent", { content_category: service, content_name: service });
 }
 
+/* -------------------------------------------------------------- booking -- */
+
+/** Any "book online" button, anywhere. `location` names the section. */
+export function trackBookClick(location: string, service?: string): void {
+  gtagEvent("book_cta_click", { location, service: service ?? "unspecified" });
+}
+
+/** The visitor is leaving for the Square deposit checkout. */
+export function trackBookingCheckout(service: string, total: number, deposit: number): void {
+  gtagEvent("begin_checkout", { service, currency: "USD", value: deposit, job_total: total });
+  fbqEvent("InitiateCheckout", { content_category: service, currency: "USD", value: deposit });
+}
+
+/**
+ * Deposit paid, appointment confirmed — the most valuable conversion the site
+ * produces. Fired once per booking id from the /book/confirmed page.
+ */
+export function trackBookingConfirmed(service: string, total: number, deposit: number): void {
+  gtagEvent("booking_confirmed", { service, currency: "USD", value: total, deposit });
+  fbqEvent("Schedule", { content_category: service, currency: "USD", value: total });
+}
+
 /* -------------------------------------------------------------- content -- */
 
 export function trackGalleryFilter(filter: string): void {

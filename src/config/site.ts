@@ -62,6 +62,22 @@ export const site = {
    */
   publishPrices: false,
 
+  /**
+   * OWNER DECISION 2026-10-03: online booking with a deposit, offered next to
+   * "Get a quote" — and /book is the ONLY place on the site that shows prices
+   * (it reads ShopFlow directly and ignores `publishPrices`, which keeps every
+   * other page price-free).
+   *
+   * `services` lists the site service slugs that can be booked online.
+   * WINDOW TINT ONLY (owner call 2026-10-03): detailing, PPF and ceramic
+   * coating are higher-ticket and stay on the quote form. Prices, durations,
+   * add-ons, open hours and the deposit amount all come live from ShopFlow.
+   */
+  booking: {
+    enabled: true,
+    services: ["window-tint"] as string[],
+  },
+
   /** Canonical origin — used for canonical tags, OG URLs and the sitemap. */
   url: "https://www.evosolution.org",
 

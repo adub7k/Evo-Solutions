@@ -36,7 +36,7 @@ export function MobileCTA({ visible }: { visible: boolean }) {
     return () => io.disconnect();
   }, [pathname]);
 
-  if (pathname === "/quote") return null;
+  if (pathname === "/quote" || pathname.startsWith("/book")) return null;
 
   const shown = visible && !formInView;
 

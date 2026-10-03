@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { BookButton } from "@/components/site/BookButton";
 import { ArrowRight, Star } from "lucide-react";
 import { site } from "@/config/site";
 import { images } from "@/config/images";
@@ -79,7 +80,7 @@ export function Hero() {
             <span className="text-faint-foreground">·</span> Detailing
           </p>
 
-          <div className="hero-step-3 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="hero-step-3 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               to="/quote"
               onClick={() => trackQuoteClick("hero")}
@@ -88,6 +89,7 @@ export function Hero() {
               Get My Free Quote
               <ArrowRight className="h-4 w-4" />
             </Link>
+            <BookButton location="hero" />
             <Link to="/gallery" className="btn btn-ghost btn-lg">
               View Our Work
             </Link>

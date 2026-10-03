@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { BookButton } from "@/components/site/BookButton";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, Phone, ChevronDown, ArrowRight } from "lucide-react";
 import { site } from "@/config/site";
@@ -156,15 +157,16 @@ export function Nav({ scrolled }: { scrolled: boolean }) {
               <a
                 href={site.business.phoneHref}
                 onClick={() => trackPhoneClick("nav")}
-                className="hidden xl:flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="hidden 2xl:flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Phone className="h-4 w-4" />
                 {site.business.phone}
               </a>
+              <BookButton location="nav" className="btn btn-ghost whitespace-nowrap text-sm" label="Book Tint" />
               <Link
                 to="/quote"
                 onClick={() => trackQuoteClick("nav")}
-                className="btn btn-primary text-sm"
+                className="btn btn-primary whitespace-nowrap text-sm"
               >
                 Get My Free Quote
               </Link>
@@ -267,6 +269,11 @@ export function Nav({ scrolled }: { scrolled: boolean }) {
             Get My Free Quote
             <ArrowRight className="h-4 w-4" />
           </Link>
+          <BookButton
+            location="mobile-menu"
+            className="btn btn-ghost btn-lg mt-3"
+            onClick={() => setOpen(false)}
+          />
           <a
             href={site.business.phoneHref}
             onClick={() => trackPhoneClick("mobile-menu")}

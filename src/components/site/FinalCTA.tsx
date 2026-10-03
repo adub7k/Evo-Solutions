@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { BookButton } from "@/components/site/BookButton";
 import { ArrowRight, Phone, MapPin } from "lucide-react";
 import { site } from "@/config/site";
 import { trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
@@ -8,11 +9,14 @@ export function FinalCTA({
   body = "Tell us what you drive and what's bothering you. You'll get a straight recommendation and a flat price — no pressure, no upsell to film you don't need.",
   location = "final-cta",
   service,
+  book = false,
 }: {
   heading?: string;
   body?: string;
   location?: string;
   service?: string;
+  /** Show "Book online" beside the quote button (window tint only). */
+  book?: boolean;
 }) {
   return (
     <section className="border-t border-border bg-surface/40">
@@ -23,7 +27,7 @@ export function FinalCTA({
             {body}
           </p>
 
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
             <Link
               to="/quote"
               onClick={() => trackQuoteClick(location, service)}
@@ -32,6 +36,7 @@ export function FinalCTA({
               Get My Free Quote
               <ArrowRight className="h-4 w-4" />
             </Link>
+            {book && <BookButton location={location} />}
             <a
               href={site.business.phoneHref}
               onClick={() => trackPhoneClick(location)}

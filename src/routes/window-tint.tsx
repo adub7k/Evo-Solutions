@@ -83,6 +83,7 @@ function WindowTint() {
   return (
     <SiteLayout>
       <ServiceHero
+        book
         eyebrow={s.eyebrow}
         headline={s.headline}
         sub={s.sub}
@@ -244,6 +245,7 @@ function WindowTint() {
 
       <RelatedServices slugs={s.related} guidesFor={s.slug} />
       <FinalCTA
+        book
         heading="Ready to stop baking?"
         body="Send us the year, make and model and we'll come back with a shade recommendation and a flat price."
         location="window-tint-final"

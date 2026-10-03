@@ -25,7 +25,9 @@ import { Route as AutoDetailingRouteImport } from './routes/auto-detailing'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as BookIndexRouteImport } from './routes/book.index'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
+import { Route as BookConfirmedRouteImport } from './routes/book.confirmed'
 
 const WindowTintRoute = WindowTintRouteImport.update({
   id: '/window-tint',
@@ -107,9 +109,19 @@ const GuidesIndexRoute = GuidesIndexRouteImport.update({
   path: '/guides/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookIndexRoute = BookIndexRouteImport.update({
+  id: '/book/',
+  path: '/book/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuidesSlugRoute = GuidesSlugRouteImport.update({
   id: '/guides/$slug',
   path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookConfirmedRoute = BookConfirmedRouteImport.update({
+  id: '/book/confirmed',
+  path: '/book/confirmed',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -129,7 +141,9 @@ export interface FileRoutesByFullPath {
   '/tint': typeof TintRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
   '/window-tint': typeof WindowTintRoute
+  '/book/confirmed': typeof BookConfirmedRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/book/': typeof BookIndexRoute
   '/guides/': typeof GuidesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -148,7 +162,9 @@ export interface FileRoutesByTo {
   '/tint': typeof TintRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
   '/window-tint': typeof WindowTintRoute
+  '/book/confirmed': typeof BookConfirmedRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/book': typeof BookIndexRoute
   '/guides': typeof GuidesIndexRoute
 }
 export interface FileRoutesById {
@@ -168,7 +184,9 @@ export interface FileRoutesById {
   '/tint': typeof TintRoute
   '/tint-laws-new-mexico': typeof TintLawsNewMexicoRoute
   '/window-tint': typeof WindowTintRoute
+  '/book/confirmed': typeof BookConfirmedRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/book/': typeof BookIndexRoute
   '/guides/': typeof GuidesIndexRoute
 }
 export interface FileRouteTypes {
@@ -189,7 +207,9 @@ export interface FileRouteTypes {
     | '/tint'
     | '/tint-laws-new-mexico'
     | '/window-tint'
+    | '/book/confirmed'
     | '/guides/$slug'
+    | '/book/'
     | '/guides/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -208,7 +228,9 @@ export interface FileRouteTypes {
     | '/tint'
     | '/tint-laws-new-mexico'
     | '/window-tint'
+    | '/book/confirmed'
     | '/guides/$slug'
+    | '/book'
     | '/guides'
   id:
     | '__root__'
@@ -227,7 +249,9 @@ export interface FileRouteTypes {
     | '/tint'
     | '/tint-laws-new-mexico'
     | '/window-tint'
+    | '/book/confirmed'
     | '/guides/$slug'
+    | '/book/'
     | '/guides/'
   fileRoutesById: FileRoutesById
 }
@@ -247,7 +271,9 @@ export interface RootRouteChildren {
   TintRoute: typeof TintRoute
   TintLawsNewMexicoRoute: typeof TintLawsNewMexicoRoute
   WindowTintRoute: typeof WindowTintRoute
+  BookConfirmedRoute: typeof BookConfirmedRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
+  BookIndexRoute: typeof BookIndexRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
 }
 
@@ -365,11 +391,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuidesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/': {
+      id: '/book/'
+      path: '/book'
+      fullPath: '/book/'
+      preLoaderRoute: typeof BookIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/guides/$slug': {
       id: '/guides/$slug'
       path: '/guides/$slug'
       fullPath: '/guides/$slug'
       preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/confirmed': {
+      id: '/book/confirmed'
+      path: '/book/confirmed'
+      fullPath: '/book/confirmed'
+      preLoaderRoute: typeof BookConfirmedRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -391,7 +431,9 @@ const rootRouteChildren: RootRouteChildren = {
   TintRoute: TintRoute,
   TintLawsNewMexicoRoute: TintLawsNewMexicoRoute,
   WindowTintRoute: WindowTintRoute,
+  BookConfirmedRoute: BookConfirmedRoute,
   GuidesSlugRoute: GuidesSlugRoute,
+  BookIndexRoute: BookIndexRoute,
   GuidesIndexRoute: GuidesIndexRoute,
 }
 export const routeTree = rootRouteImport

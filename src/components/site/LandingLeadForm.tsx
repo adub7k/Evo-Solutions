@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { BookButton } from "@/components/site/BookButton";
 import { site } from "@/config/site";
 import { carName, optionKey, tintLanding, type LandingVariant } from "@/content/landing";
 import {
@@ -586,6 +587,14 @@ function FormStages({
           <Phone className="h-4 w-4" />
           Call {shopPhone.display}
         </a>
+        {/* Tint is the only service booked online (site.booking). */}
+        {variant.key === "tint" && (
+          <BookButton
+            location="landing-form"
+            className="btn btn-ghost btn-lg w-full"
+            label="Know what you want? Book online"
+          />
+        )}
       </div>
 
       <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
@@ -599,7 +608,7 @@ function FormStages({
 
 /* ============================================================ subparts == */
 
-function Chips({
+export function Chips({
   legend,
   hint,
   name,
@@ -647,7 +656,7 @@ function Chips({
   );
 }
 
-function Input({
+export function Input({
   idPrefix,
   label,
   value,

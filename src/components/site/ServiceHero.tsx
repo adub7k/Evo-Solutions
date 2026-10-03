@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { BookButton } from "@/components/site/BookButton";
 import { ArrowRight, Phone } from "lucide-react";
 import { site } from "@/config/site";
 import { images, bundledFor, type ServiceImageSlot } from "@/config/images";
@@ -20,6 +21,7 @@ export function ServiceHero({
   slot,
   serviceName,
   breadcrumbs,
+  book = false,
 }: {
   eyebrow: string;
   headline: string;
@@ -27,6 +29,8 @@ export function ServiceHero({
   slot: ServiceImageSlot;
   serviceName: string;
   breadcrumbs: { name: string; path: string }[];
+  /** Show "Book online" beside the quote button (window tint only). */
+  book?: boolean;
 }) {
   const fallback = images.service[slot];
   const src = useSiteImage(slot, fallback.webp);
@@ -43,7 +47,7 @@ export function ServiceHero({
             <h1 className="mt-4">{headline}</h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">{sub}</p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 to="/quote"
                 onClick={() => trackQuoteClick("service-hero", serviceName)}
@@ -52,6 +56,7 @@ export function ServiceHero({
                 Get My Free Quote
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              {book && <BookButton location="service-hero" />}
               <a
                 href={site.business.phoneHref}
                 onClick={() => trackPhoneClick("service-hero")}
