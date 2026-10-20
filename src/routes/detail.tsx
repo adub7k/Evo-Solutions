@@ -31,6 +31,7 @@ import {
   durationRangeLabel,
   fetchBookingMenu,
   fromPrice,
+  groupAddons,
   type BookableService,
   type BookingMenu,
 } from "@/lib/booking";
@@ -330,16 +331,32 @@ function Packages({
         {menu?.addons.length ? (
           <Reveal className="mt-6 rounded-lg border border-border bg-surface/50 p-5 sm:p-6">
             <p className="eyebrow">Add to any package</p>
-            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {menu.addons.map((a) => (
-                <li key={a.id} className="text-muted-foreground">
-                  {a.name}{" "}
-                  <span className="font-display font-semibold text-foreground">
-                    +{money(a.price)}
-                  </span>
-                </li>
+            {/* In the owner's groups (Interior / Exterior / …) when he's set
+                them in ShopFlow; one flat list when he hasn't. */}
+            <div className="mt-3 grid gap-x-10 gap-y-4 sm:grid-cols-2">
+              {groupAddons(menu.addons).map((g) => (
+                <div key={g.group || "_"}>
+                  {g.group && (
+                    <p className="mb-1.5 font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      {g.group}
+                    </p>
+                  )}
+                  <ul className="space-y-1 text-sm">
+                    {g.items.map((a) => (
+                      <li
+                        key={a.id}
+                        className="flex items-baseline justify-between gap-4 text-muted-foreground"
+                      >
+                        <span>{a.name}</span>
+                        <span className="font-display font-semibold tabular-nums text-foreground">
+                          +{money(a.price)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </Reveal>
         ) : null}
       </div>

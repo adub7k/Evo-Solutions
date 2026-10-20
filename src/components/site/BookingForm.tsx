@@ -30,6 +30,7 @@ import {
   fetchSlots,
   formatBookingDate,
   fromPrice,
+  groupAddons,
   hoursLabel,
   isoDate,
   priceFor,
@@ -501,33 +502,42 @@ function BookingStages({
         {/* 3 — extras (only when the chosen service has any) */}
         {service && extras.length > 0 && (
           <Section n={3} title="Anything extra?" id={`${id}-sec-extras`} optional>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {extras.map((a) => {
-                const on = addonIds.includes(a.id);
-                return (
-                  <label
-                    key={a.id}
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm transition-colors ${
-                      on ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={on}
-                        onChange={() =>
-                          setAddonIds((ids) =>
-                            on ? ids.filter((x) => x !== a.id) : [...ids, a.id],
-                          )
-                        }
-                        className="h-4 w-4 accent-[var(--accent)]"
-                      />
-                      {a.name}
-                    </span>
-                    <span className="text-muted-foreground">+{money(a.price)}</span>
-                  </label>
-                );
-              })}
+            {/* Grouped under the owner's own headings (Interior / Exterior)
+                when ShopFlow has them; a single ungrouped grid otherwise. */}
+            <div className="space-y-5">
+              {groupAddons(extras).map((g) => (
+                <div key={g.group || "_"}>
+                  {g.group && <p className="eyebrow mb-2.5">{g.group}</p>}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {g.items.map((a) => {
+                      const on = addonIds.includes(a.id);
+                      return (
+                        <label
+                          key={a.id}
+                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm transition-colors ${
+                            on ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2"
+                          }`}
+                        >
+                          <span className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={on}
+                              onChange={() =>
+                                setAddonIds((ids) =>
+                                  on ? ids.filter((x) => x !== a.id) : [...ids, a.id],
+                                )
+                              }
+                              className="h-4 w-4 accent-[var(--accent)]"
+                            />
+                            {a.name}
+                          </span>
+                          <span className="text-muted-foreground">+{money(a.price)}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </Section>
         )}

@@ -43,7 +43,34 @@ export type BookableService = {
   durations: Record<string, number> | null;
 };
 
-export type BookingAddOn = { id: string; name: string; price: number; slug: string };
+export type BookingAddOn = {
+  id: string;
+  name: string;
+  price: number;
+  slug: string;
+  /** The owner's own heading for it in ShopFlow ("Interior", "Exterior"); "" = ungrouped. */
+  group: string;
+};
+
+/**
+ * Add-ons in the owner's groups, in the order the groups first appear, with
+ * ungrouped ones last under "". A single group (or none) comes back as one
+ * entry so callers can skip the heading.
+ */
+export function groupAddons<T extends { group: string }>(
+  list: T[],
+): { group: string; items: T[] }[] {
+  const out: { group: string; items: T[] }[] = [];
+  for (const a of list) {
+    let g = out.find((x) => x.group === a.group);
+    if (!g) {
+      g = { group: a.group, items: [] };
+      out.push(g);
+    }
+    g.items.push(a);
+  }
+  return out.sort((a, b) => (a.group === "" ? 1 : b.group === "" ? -1 : 0));
+}
 
 export type BookingMenu = {
   services: BookableService[];
@@ -152,7 +179,13 @@ function toMenu(info: Record<string, unknown>, wanted: readonly string[]): Booki
     const price = Number(a.price);
     const match = ADDON_MATCHERS.find(([re]) => re.test(name));
     if (!name || !match || !(price > 0) || !allowed.has(match[1])) continue;
-    addons.push({ id: String(a.id), name: tidyName(name), price, slug: match[1] });
+    addons.push({
+      id: String(a.id),
+      name: tidyName(name),
+      price,
+      slug: match[1],
+      group: String(a.group ?? "").trim(),
+    });
   }
 
   const workDays = new Set<number>();
