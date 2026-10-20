@@ -18,7 +18,7 @@
 import { publicApi } from "@/config/shopflow";
 import { site } from "@/config/site";
 import { ADDON_MATCHERS, CATEGORY_TO_SLUG, tidyName } from "@/lib/pricing";
-import { getAttributionLines } from "@/lib/leads";
+import { getAttribution, getAttributionLines } from "@/lib/leads";
 
 export type BookableService = {
   id: string;
@@ -26,11 +26,21 @@ export type BookableService = {
   name: string;
   /** Site service slug ("window-tint"). */
   slug: string;
+  /**
+   * The owner's own description from ShopFlow → Settings → Services — what the
+   * package includes, written by Angelo. Empty when he hasn't filled it in.
+   */
+  description: string;
   /** Per-size price, keyed by ShopFlow size key; null = flat price. */
   sizes: Record<string, number> | null;
   flat: number | null;
-  /** Minutes. */
+  /** Minutes (the flat figure ShopFlow holds for the service). */
   duration: number;
+  /**
+   * Per-size minutes, when the shop set them (a truck detail runs hours
+   * longer than a sedan's). Keys are ShopFlow size keys; null = flat only.
+   */
+  durations: Record<string, number> | null;
 };
 
 export type BookingAddOn = { id: string; name: string; price: number; slug: string };
@@ -54,28 +64,39 @@ export const BOOKING_GROUPS: Record<string, string> = {
   "ceramic-coating": "Ceramic coating",
 };
 
-let menuPromise: Promise<BookingMenu | null> | null = null;
+const menuPromises = new Map<string, Promise<BookingMenu | null>>();
 
-export function fetchBookingMenu(): Promise<BookingMenu | null> {
+/**
+ * The bookable menu for a set of site service slugs. /book uses the owner's
+ * list (site.booking.services — window tint); the detailing ad page asks for
+ * ["auto-detailing"] and gets only those packages, so the owner's "tint only
+ * on /book" call stands while a paid page can still book its own service.
+ */
+export function fetchBookingMenu(
+  services: readonly string[] = site.booking.services,
+): Promise<BookingMenu | null> {
   if (!site.booking.enabled) return Promise.resolve(null);
-  if (!menuPromise) {
-    menuPromise = fetch(publicApi("/info"))
+  const key = services.join(",");
+  let p = menuPromises.get(key);
+  if (!p) {
+    p = fetch(publicApi("/info"))
       .then((r) => {
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
       })
-      .then(toMenu)
+      .then((info) => toMenu(info, services))
       .catch(() => {
-        menuPromise = null; // let a retry try again
+        menuPromises.delete(key); // let a retry try again
         return null;
       });
+    menuPromises.set(key, p);
   }
-  return menuPromise;
+  return p;
 }
 
-function toMenu(info: Record<string, unknown>): BookingMenu | null {
+function toMenu(info: Record<string, unknown>, wanted: readonly string[]): BookingMenu | null {
   if (info.bookingEnabled === false) return null;
-  const allowed = new Set(site.booking.services);
+  const allowed = new Set(wanted);
   const sizes = Array.isArray(info.vehicleSizes)
     ? (info.vehicleSizes as { key: string; label: string }[]).map((s) => ({
         key: s.key,
@@ -98,20 +119,29 @@ function toMenu(info: Record<string, unknown>): BookingMenu | null {
     const flat = Number(raw.price);
     const hasSizes = Object.keys(sized).length > 0;
     if (!hasSizes && !(Number.isFinite(flat) && flat > 0)) continue; // unpriced → not bookable
+    const sd = raw.sizeDuration as Record<string, unknown> | null | undefined;
+    const durations: Record<string, number> = {};
+    if (sd && typeof sd === "object") {
+      for (const sz of sizes) {
+        const n = Number(sd[sz.key]);
+        if (Number.isFinite(n) && n > 0) durations[sz.key] = n;
+      }
+    }
     services.push({
       id: String(raw.id),
       name: tidyName(String(raw.name)),
       slug,
+      description: String(raw.description ?? "").trim(),
       sizes: hasSizes ? sized : null,
       flat: hasSizes ? null : flat,
       duration: Number(raw.duration) || 60,
+      durations: Object.keys(durations).length ? durations : null,
     });
   }
   // Full-vehicle jobs first, then partials, cheapest first — same rule as the
   // pricing tables, so "Front 2 windows" never reads as the price of a car.
   services.sort((a, b) => {
-    if (a.slug !== b.slug)
-      return site.booking.services.indexOf(a.slug) - site.booking.services.indexOf(b.slug);
+    if (a.slug !== b.slug) return wanted.indexOf(a.slug) - wanted.indexOf(b.slug);
     if (!!a.sizes !== !!b.sizes) return a.sizes ? -1 : 1;
     return fromPrice(a) - fromPrice(b);
   });
@@ -158,6 +188,22 @@ export function priceFor(s: BookableService, sizeKey: string | null): number | n
   if (s.flat != null) return s.flat;
   if (!sizeKey) return null;
   return s.sizes?.[sizeKey] ?? null;
+}
+
+/** Minutes a service takes for a vehicle size — the flat figure until a size is chosen. */
+export function durationFor(s: BookableService, sizeKey: string | null): number {
+  return (sizeKey && s.durations?.[sizeKey]) || s.duration;
+}
+
+/** "about 2.5–4.5 hrs" across the sizes, for a card shown before a size is picked. */
+export function durationRangeLabel(s: BookableService): string {
+  const mins = Object.values(s.durations ?? {});
+  if (mins.length < 2) return hoursLabel(s.duration);
+  const lo = Math.min(...mins);
+  const hi = Math.max(...mins);
+  if (lo === hi) return hoursLabel(lo);
+  const h = (m: number) => (Number.isInteger(m / 60) ? String(m / 60) : (m / 60).toFixed(1));
+  return `about ${h(lo)}–${h(hi)} hrs`;
 }
 
 /**
@@ -247,11 +293,18 @@ export function bookableDays(menu: BookingMenu, count = 14): Date[] {
  * Open start times for a date, minus anything inside the minimum-notice
  * window (ShopFlow only knows dates, not "now", so the cut happens here).
  */
-export async function fetchSlots(dateISO: string, serviceIds: string[]): Promise<string[] | null> {
+export async function fetchSlots(
+  dateISO: string,
+  serviceIds: string[],
+  sizeKey: string | null = null,
+): Promise<string[] | null> {
   try {
+    // The size picks each service's per-size length server-side, so the times
+    // offered are the ones a truck-length job actually fits into.
+    const size = sizeKey ? `&vehicleSize=${encodeURIComponent(sizeKey)}` : "";
     const res = await fetch(
       publicApi(
-        `/availability?date=${dateISO}&serviceId=${serviceIds.map(encodeURIComponent).join(",")}`,
+        `/availability?date=${dateISO}&serviceId=${serviceIds.map(encodeURIComponent).join(",")}${size}`,
       ),
     );
     if (!res.ok) return null;
@@ -336,6 +389,11 @@ export async function book(req: BookingRequest, deposit: number | null): Promise
     .filter(Boolean)
     .join("\n");
 
+  // The ad trail also goes on the appointment as fields (ShopFlow stores
+  // utm/gclid/referrer on bookings and normalises `source`), so a paid click
+  // that books straight through counts under "google" in revenue by source —
+  // the note lines above are the human-readable copy of the same thing.
+  const attr = getAttribution();
   let appointmentId: string;
   try {
     const res = await fetch(publicApi("/book"), {
@@ -352,7 +410,10 @@ export async function book(req: BookingRequest, deposit: number | null): Promise
         date: req.date,
         time: req.time,
         notes,
-        source: "website",
+        source: attr.utm?.source || "website",
+        utm: attr.utm ?? {},
+        gclid: attr.click?.gclid ?? "",
+        referrer: attr.referrer ?? "",
         customFields: {
           vehicleYear: req.vehicle.year.trim(),
           vehicleMake: req.vehicle.make.trim(),

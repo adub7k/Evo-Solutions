@@ -80,7 +80,7 @@ export function captureAttribution() {
   }
 }
 
-function getAttribution(): Attribution {
+export function getAttribution(): Attribution {
   try {
     const raw = sessionStorage.getItem(UTM_KEY);
     if (raw) return JSON.parse(raw) as Attribution;

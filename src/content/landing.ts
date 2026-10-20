@@ -21,7 +21,14 @@ export type Vehicle = { year: string; make: string; model: string };
 export type Estimate = { label: string; min: number; max: number };
 
 export type LandingVariant = {
-  key: "tint" | "ppf" | "ceramic";
+  key: "tint" | "ppf" | "ceramic" | "detail";
+  /**
+   * In-page anchor of a booking form on the same page (/detail#book).
+   * When set, the contact step offers "Know what you want? Book online" next
+   * to the call button, so a visitor who only wanted to ask first can jump
+   * straight to booking without leaving the page.
+   */
+  bookAnchor?: string;
   /** Human label for the lead's notes ("Window Tint"). */
   service: string;
   /** Must match the shop's ShopFlow lead-form option character for character. */
@@ -281,6 +288,75 @@ export const ceramicLanding: LandingVariant = {
   estimateNote: () => "",
   successNote: (_choice, v) =>
     `We'll look over what you sent and text one flat number for the ${carName(v)} — usually the same day during shop hours.`,
+};
+
+/* ================================================================ detail == */
+
+const DETAIL = serviceBySlug("auto-detailing");
+
+/**
+ * /detail is the one ad page where the visitor can BOOK, not just ask —
+ * the three packages are priced by vehicle size in ShopFlow, so the page
+ * shows them and books them. This form is the "not sure which package?"
+ * path beside the booking form, so its one qualifying question is the car's
+ * condition, not a package: the shop texts back which package fits.
+ */
+export const DETAIL_CONDITION = [
+  "Daily driver — regular upkeep",
+  "Kids, pets or spills inside",
+  "Dusty — hasn't been detailed in a while",
+  "Getting it ready to sell",
+  "Not sure — take a look",
+] as const;
+
+export const detailLanding: LandingVariant = {
+  key: "detail",
+  bookAnchor: "#book",
+  service: "Auto Detailing",
+  leadValue: DETAIL?.leadValue ?? "Detail",
+  sourceLine: "Source: detailing landing page (paid search)",
+  form: {
+    heading: "Not sure which package? Ask first.",
+    intro:
+      "Name and mobile is all it takes. We'll text back which package your car actually needs and the exact price — no deposit, no obligation.",
+    trust: [
+      `Rated ${site.reviews.rating.toFixed(1)} on Google`,
+      "Priced by vehicle size",
+      "Walk-ins welcome Mon–Sat",
+    ],
+    cta: "Text Me the Right Package",
+    phoneHint: "We'll text you here.",
+  },
+  choice: {
+    legend: "What's the car like right now?",
+    hint: "Condition decides the package more than anything — a Silver on a clean daily driver, a Gold once dust and life have got in.",
+    options: DETAIL_CONDITION,
+    initial: "Not sure — take a look",
+    noteLabel: "Condition",
+    param: "condition",
+  },
+  concern: {
+    legend: "What matters most?",
+    options: [
+      "Interior deep clean",
+      "Paint looks hazy or swirled",
+      "Smell or stains",
+      "Long-term protection",
+      "Just make it feel new again",
+    ],
+  },
+  details: {
+    intro:
+      "Year, make and model lets us text back the exact package price instead of a question. Photos of the worst areas get you a straight answer.",
+    cta: "Send My Car Details",
+    photos: "Up to 3 photos — seats, carpets, or the paint in daylight.",
+  },
+  // The prices are on the page itself (and in the booking form), so the
+  // success screen doesn't repeat an estimate.
+  estimate: () => null,
+  estimateNote: () => "",
+  successNote: (_choice, v) =>
+    `We'll text which package fits the ${carName(v)} and the exact price — usually the same day during shop hours. Ready now? The booking form is just above.`,
 };
 
 /** Where damage lands, in order of how often we see it. Used on both PPF pages. */

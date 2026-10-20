@@ -57,7 +57,14 @@ export const CATEGORY_TO_SLUG: Record<string, string> = {
  */
 export const ADDON_MATCHERS: [RegExp, string][] = [
   [/windshield|sun\s*roof|moon\s*roof|tint/i, "window-tint"],
-  [/pet hair|interior|carpet|shampoo|odou?r|detail/i, "auto-detailing"],
+  // The detailing extras Angelo sells (pet hair, ozone, engine bay, headlights,
+  // leather, fabric protectant, glass coating, polish, heavy-soil surcharge,
+  // child seats, tar). Listed before the coating matcher so "glass coating"
+  // and "polish" land here, not under ceramic coating.
+  [
+    /pet hair|interior|carpet|shampoo|odou?r|ozone|smoke|detail|engine|headlight|leather|fabric|protectant|glass coating|rain|polish|swirl|soil|biohazard|child seat|car seat|tar|overspray/i,
+    "auto-detailing",
+  ],
   [/coating|ceramic coat/i, "ceramic-coating"],
   [/ppf|paint protection|clear bra/i, "paint-protection-film"],
 ];

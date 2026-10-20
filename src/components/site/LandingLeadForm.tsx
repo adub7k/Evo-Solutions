@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
+  CalendarCheck,
   Camera,
   Check,
   Loader2,
@@ -21,6 +22,7 @@ import {
   uploadPhotos,
 } from "@/lib/leads";
 import {
+  trackBookClick,
   trackLeadCaptured,
   trackPhoneClick,
   trackQuoteAdsConversion,
@@ -587,13 +589,24 @@ function FormStages({
           <Phone className="h-4 w-4" />
           Call {shopPhone.display}
         </a>
-        {/* Tint is the only service booked online (site.booking). */}
+        {/* Tint books on /book (site.booking); a page with its own booking
+            form (/detailing) points at that instead. */}
         {variant.key === "tint" && (
           <BookButton
             location="landing-form"
             className="btn btn-ghost btn-lg w-full"
             label="Know what you want? Book online"
           />
+        )}
+        {variant.bookAnchor && (
+          <a
+            href={variant.bookAnchor}
+            onClick={() => trackBookClick("landing-form", variant.service)}
+            className="btn btn-ghost btn-lg w-full"
+          >
+            <CalendarCheck className="h-4 w-4" />
+            Know what you want? Book online
+          </a>
         )}
       </div>
 

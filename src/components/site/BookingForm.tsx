@@ -24,6 +24,8 @@ import {
   depositCheckout,
   bookableDays,
   BOOKING_GROUPS,
+  durationFor,
+  durationRangeLabel,
   fetchBookingMenu,
   fetchSlots,
   formatBookingDate,
@@ -48,16 +50,32 @@ type Errors = Partial<
 const dayFmt = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const dateFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 
-export function BookingForm({ preset }: { preset?: string }) {
+export type BookingFormProps = {
+  /** Preselects a service by its name key ("gold-detail"); prefix match. */
+  preset?: string;
+  /** Bump to re-apply the same preset (a package card tapped twice). */
+  presetKey?: number;
+  /**
+   * Site service slugs this form books. Defaults to the owner's /book list
+   * (site.booking.services); the /detail ad page passes ["auto-detailing"].
+   */
+  services?: readonly string[];
+  /** The "looking for something else?" line under the service cards. */
+  quoteNote?: React.ReactNode;
+};
+
+export function BookingForm({ preset, presetKey, services, quoteNote }: BookingFormProps) {
   const [menu, setMenu] = useState<BookingMenu | null | undefined>(undefined);
+  const list = services ?? site.booking.services;
+  const listKey = list.join(",");
   useEffect(() => {
     captureAttribution();
     let alive = true;
-    fetchBookingMenu().then((m) => alive && setMenu(m));
+    fetchBookingMenu(listKey.split(",")).then((m) => alive && setMenu(m));
     return () => {
       alive = false;
     };
-  }, []);
+  }, [listKey]);
 
   if (menu === undefined) {
     return (
@@ -67,7 +85,15 @@ export function BookingForm({ preset }: { preset?: string }) {
     );
   }
   if (!menu) return <BookingUnavailable />;
-  return <BookingStages menu={menu} preset={preset} />;
+  return (
+    <BookingStages
+      menu={menu}
+      preset={preset}
+      presetKey={presetKey}
+      services={list}
+      quoteNote={quoteNote}
+    />
+  );
 }
 
 function BookingUnavailable() {
@@ -99,16 +125,39 @@ function BookingUnavailable() {
   );
 }
 
-function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string }) {
+function BookingStages({
+  menu,
+  preset,
+  presetKey = 0,
+  services,
+  quoteNote,
+}: {
+  menu: BookingMenu;
+  preset?: string;
+  presetKey?: number;
+  services: readonly string[];
+  quoteNote?: React.ReactNode;
+}) {
   const id = useId();
   const navigate = useNavigate();
 
   // Several services can share one visit (e.g. front 2 windows + windshield);
   // conflicting picks replace each other — see conflicts() in lib/booking.
+  const presetHit = (key?: string) =>
+    key ? menu.services.find((s) => optionKey(s.name).startsWith(key)) : undefined;
   const [serviceIds, setServiceIds] = useState<string[]>(() => {
-    const hit = menu.services.find((s) => preset && optionKey(s.name) === preset);
+    const hit = presetHit(preset);
     return hit ? [hit.id] : [];
   });
+  // A preset is an explicit choice (an arrival hash, or a package card tapped
+  // on the page), so a later one replaces whatever was picked — and the key
+  // bump means tapping the same card twice still re-applies it.
+  useEffect(() => {
+    const hit = presetHit(preset);
+    if (hit) setServiceIds([hit.id]);
+    // presetHit only depends on the menu, which is stable for this instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset, presetKey]);
   const [sizeKey, setSizeKey] = useState<string | null>(null);
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [date, setDate] = useState<string | null>(null);
@@ -137,7 +186,9 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
         name: selected.map((s) => s.name).join(" + "),
         slug: selected[0].slug,
         sizes: selected.some((s) => s.sizes),
-        duration: selected.reduce((t, s) => t + s.duration, 0),
+        // Per-size length once a size is picked (a truck detail runs hours
+        // longer than a sedan's); the flat figure until then.
+        duration: selected.reduce((t, s) => t + durationFor(s, sizeKey), 0),
       }
     : null;
   const extras = selected
@@ -153,15 +204,21 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
   const total = base == null ? null : base + chosenExtras.reduce((t, a) => t + a.price, 0);
   const deposit = menu.deposit?.amount ?? 0;
   const days = useMemo(() => bookableDays(menu), [menu]);
-  const slotKey = date && service ? `${date}|${[...serviceIds].sort().join(",")}` : null;
+  // The size is part of the key only when it changes the job's length —
+  // otherwise picking a size would refetch identical times for nothing.
+  const sizeMatters = selected.some((s) => s.durations);
+  const slotKey =
+    date && service
+      ? `${date}|${[...serviceIds].sort().join(",")}|${sizeMatters ? (sizeKey ?? "") : ""}`
+      : null;
   const daySlots = slotKey ? slots[slotKey] : undefined;
 
-  // Slots depend on the job's length, so they're fetched per (date, service).
+  // Slots depend on the job's length, so they're fetched per (date, service, size).
   useEffect(() => {
     if (!slotKey || slotKey in slots) return;
-    const [d, ids] = slotKey.split("|");
+    const [d, ids, size] = slotKey.split("|");
     let alive = true;
-    fetchSlots(d, ids.split(",")).then(
+    fetchSlots(d, ids.split(","), size || null).then(
       (list) => alive && setSlots((m) => ({ ...m, [slotKey]: list })),
     );
     return () => {
@@ -303,7 +360,7 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
     });
   }
 
-  const groups = site.booking.services.filter((slug) => menu.services.some((s) => s.slug === slug));
+  const groups = services.filter((slug) => menu.services.some((s) => s.slug === slug));
 
   return (
     <form
@@ -348,7 +405,9 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
                           <span className="block pr-7 font-display font-semibold">{s.name}</span>
                           <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Clock className="h-3.5 w-3.5" />
-                            {hoursLabel(s.duration)}
+                            {sizeKey && s.durations
+                              ? hoursLabel(durationFor(s, sizeKey))
+                              : durationRangeLabel(s)}
                           </span>
                           <span className="mt-3 block font-display text-lg font-bold text-foreground">
                             {exact != null
@@ -365,15 +424,19 @@ function BookingStages({ menu, preset }: { menu: BookingMenu; preset?: string })
             ))}
           </div>
           <p className="mt-5 text-sm text-muted-foreground">
-            Looking for PPF, ceramic coating, detailing or something custom?{" "}
-            <Link
-              to="/quote"
-              onClick={() => trackQuoteClick("book-page")}
-              className="text-accent underline underline-offset-4"
-            >
-              Get a free quote
-            </Link>{" "}
-            instead.
+            {quoteNote ?? (
+              <>
+                Looking for PPF, ceramic coating, detailing or something custom?{" "}
+                <Link
+                  to="/quote"
+                  onClick={() => trackQuoteClick("book-page")}
+                  className="text-accent underline underline-offset-4"
+                >
+                  Get a free quote
+                </Link>{" "}
+                instead.
+              </>
+            )}
           </p>
         </Section>
 

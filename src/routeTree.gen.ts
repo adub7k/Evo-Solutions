@@ -17,6 +17,7 @@ import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as PpfRouteImport } from './routes/ppf'
 import { Route as PaintProtectionFilmRouteImport } from './routes/paint-protection-film'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as DetailRouteImport } from './routes/detail'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommercialWindowTintRouteImport } from './routes/commercial-window-tint'
 import { Route as CeramicCoatingRouteImport } from './routes/ceramic-coating'
@@ -67,6 +68,11 @@ const PaintProtectionFilmRoute = PaintProtectionFilmRouteImport.update({
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DetailRoute = DetailRouteImport.update({
+  id: '/detail',
+  path: '/detail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/ceramic-coating': typeof CeramicCoatingRoute
   '/commercial-window-tint': typeof CommercialWindowTintRoute
   '/contact': typeof ContactRoute
+  '/detail': typeof DetailRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/ppf': typeof PpfRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/ceramic-coating': typeof CeramicCoatingRoute
   '/commercial-window-tint': typeof CommercialWindowTintRoute
   '/contact': typeof ContactRoute
+  '/detail': typeof DetailRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/ppf': typeof PpfRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/ceramic-coating': typeof CeramicCoatingRoute
   '/commercial-window-tint': typeof CommercialWindowTintRoute
   '/contact': typeof ContactRoute
+  '/detail': typeof DetailRoute
   '/gallery': typeof GalleryRoute
   '/paint-protection-film': typeof PaintProtectionFilmRoute
   '/ppf': typeof PpfRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/ceramic-coating'
     | '/commercial-window-tint'
     | '/contact'
+    | '/detail'
     | '/gallery'
     | '/paint-protection-film'
     | '/ppf'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/ceramic-coating'
     | '/commercial-window-tint'
     | '/contact'
+    | '/detail'
     | '/gallery'
     | '/paint-protection-film'
     | '/ppf'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/ceramic-coating'
     | '/commercial-window-tint'
     | '/contact'
+    | '/detail'
     | '/gallery'
     | '/paint-protection-film'
     | '/ppf'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   CeramicCoatingRoute: typeof CeramicCoatingRoute
   CommercialWindowTintRoute: typeof CommercialWindowTintRoute
   ContactRoute: typeof ContactRoute
+  DetailRoute: typeof DetailRoute
   GalleryRoute: typeof GalleryRoute
   PaintProtectionFilmRoute: typeof PaintProtectionFilmRoute
   PpfRoute: typeof PpfRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/gallery'
       fullPath: '/gallery'
       preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/detail': {
+      id: '/detail'
+      path: '/detail'
+      fullPath: '/detail'
+      preLoaderRoute: typeof DetailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -423,6 +443,7 @@ const rootRouteChildren: RootRouteChildren = {
   CeramicCoatingRoute: CeramicCoatingRoute,
   CommercialWindowTintRoute: CommercialWindowTintRoute,
   ContactRoute: ContactRoute,
+  DetailRoute: DetailRoute,
   GalleryRoute: GalleryRoute,
   PaintProtectionFilmRoute: PaintProtectionFilmRoute,
   PpfRoute: PpfRoute,
