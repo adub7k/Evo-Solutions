@@ -359,6 +359,64 @@ export const detailLanding: LandingVariant = {
     `We'll text which package fits the ${carName(v)} and the exact price — usually the same day during shop hours. Ready now? The booking form is just above.`,
 };
 
+/**
+ * The sell for each detail package. ShopFlow holds the price, the time and
+ * the included-items checklist; this is the part a checklist can't do — who
+ * the package is for, what it fixes, and what you drive away with. Matched to
+ * the ShopFlow service by the tier word in its name, so renaming "Gold
+ * Detail" to "Gold Package" keeps its pitch; a package with no tier word
+ * renders with the checklist alone.
+ */
+export type PackagePitch = {
+  /** The one-line promise under the name. */
+  tagline: string;
+  /** Two or three sentences: what it fixes and what the result is. */
+  pitch: string;
+  /** Who should pick it. */
+  bestFor: string;
+  /** What the step up from the tier below buys you (not shown on the first tier). */
+  stepUp?: string;
+};
+
+const DETAIL_PITCH: [RegExp, PackagePitch][] = [
+  [
+    /silver|standard|basic/i,
+    {
+      tagline: "The proper reset.",
+      pitch:
+        "A real hand wash, the wheel wells nobody else touches, and a week of sealant on the paint. Inside, the vents, seat rails and every surface wiped down and vacuumed — so the car feels clean, not just rinsed.",
+      bestFor: "A daily driver that's kept up and needs a thorough clean every month or two.",
+    },
+  ],
+  [
+    /gold|full|premium(?!.*platinum)/i,
+    {
+      tagline: "The one most cars actually need.",
+      pitch:
+        "Clay bar and iron removal pull the bonded grit out of the paint so it's smooth to the touch, not just shiny from a distance, then a month of sealant locks it in. Wheels get the barrels and faces, not a quick spray. Inside, steam gets into the seams and vents a vacuum never reaches and the carpets come out disinfected.",
+      bestFor:
+        "Dust, kids, pets, a car that hasn't been detailed in a while, or one you're about to sell.",
+      stepUp:
+        "Decontaminated paint and a steam-cleaned interior — the difference between clean and detailed.",
+    },
+  ],
+  [
+    /platinum|ceramic|coat/i,
+    {
+      tagline: "Protected for years, not weeks.",
+      pitch:
+        "Everything the Gold does, then a 1–3 year ceramic coating bonded to decontaminated paint. Dirt and water let go instead of clinging, washing takes half the effort, and the gloss stays. It's the only package that's still working months after you drive off.",
+      bestFor: "New cars, dark paint, and anything you plan to keep.",
+      stepUp: "A coating that lasts seasons instead of a sealant that lasts a month.",
+    },
+  ],
+];
+
+export function detailPackagePitch(name: string): PackagePitch | null {
+  const hit = DETAIL_PITCH.find(([re]) => re.test(name));
+  return hit ? hit[1] : null;
+}
+
 /** Where damage lands, in order of how often we see it. Used on both PPF pages. */
 export const ppfImpactZones = [
   { zone: "Front bumper", note: "Takes the most, by a wide margin." },

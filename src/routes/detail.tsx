@@ -18,7 +18,7 @@ import { Photo } from "@/components/site/Photo";
 import { Reveal } from "@/components/site/Reveal";
 import { images } from "@/config/images";
 import { site } from "@/config/site";
-import { detailLanding, optionKey } from "@/content/landing";
+import { detailLanding, detailPackagePitch, optionKey } from "@/content/landing";
 import { reviews } from "@/content/reviews";
 import { serviceBySlug } from "@/content/services";
 import {
@@ -286,11 +286,12 @@ function Packages({
       <div className="container-x">
         <Reveal>
           <p className="eyebrow">Packages &amp; prices</p>
-          <h2 className="mt-3 max-w-3xl">You've seen the work. Here's what it costs.</h2>
+          <h2 className="mt-3 max-w-3xl">Three packages. Each one earns its price.</h2>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            Every price is the full price for your vehicle size — no "starting at", no surprise at
-            pickup. Not sure which size you are? Pick the closest; we confirm at drop-off before any
-            work starts.
+            Silver resets a car that's kept up. Gold decontaminates the paint and steam-cleans the
+            interior — most cars need this one. Platinum adds a ceramic coating that keeps working
+            for years. Every price is the full price for your vehicle size — no "starting at", no
+            surprise at pickup.
           </p>
         </Reveal>
 
@@ -382,6 +383,7 @@ function PackageCard({
     .map((x) => x.trim())
     .filter(Boolean);
   const priced = sizes.filter((sz) => s.sizes?.[sz.key] != null);
+  const pitch = detailPackagePitch(s.name);
 
   return (
     <Reveal
@@ -396,10 +398,33 @@ function PackageCard({
         </span>
       )}
       <h3 className="text-xl font-semibold">{s.name}</h3>
+      {pitch && (
+        <p className="mt-1 font-display text-[0.9375rem] font-semibold text-accent">
+          {pitch.tagline}
+        </p>
+      )}
       <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Clock className="h-3.5 w-3.5" />
         {durationRangeLabel(s)}
       </p>
+
+      {/* The sell before the price: what it fixes, who it's for. The
+          checklist underneath is the owner's own list from ShopFlow. */}
+      {pitch && (
+        <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed">
+          <p className="text-muted-foreground">{pitch.pitch}</p>
+          <p>
+            <span className="font-semibold">Best for: </span>
+            <span className="text-muted-foreground">{pitch.bestFor}</span>
+          </p>
+          {pitch.stepUp && (
+            <p className="rounded-md border border-border bg-background/40 px-3 py-2 text-sm">
+              <span className="font-semibold text-accent">The step up: </span>
+              <span className="text-muted-foreground">{pitch.stepUp}</span>
+            </p>
+          )}
+        </div>
+      )}
 
       {priced.length ? (
         <dl className="mt-5 space-y-1.5 border-y border-border py-4">
@@ -420,6 +445,11 @@ function PackageCard({
 
       {included.length > 0 && (
         <ul className="mt-5 flex-1 space-y-2.5">
+          {pitch && (
+            <li className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              What's included
+            </li>
+          )}
           {included.map((item) => (
             <li key={item} className="flex gap-2.5 text-[0.9375rem] leading-snug">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={2.5} />
