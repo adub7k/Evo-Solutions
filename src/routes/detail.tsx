@@ -201,14 +201,19 @@ function Hero({
           </p>
 
           <h1 className="mt-4 text-[clamp(2.4rem,6.4vw,4.1rem)]">
-            The detail shop Albuquerque rates {site.reviews.rating.toFixed(1)}.{" "}
-            <span className="text-accent">Prices up front, booked online.</span>
+            {site.reviews.rating.toFixed(1)} on Google. Priced up front.{" "}
+            <span className="text-accent">Booked in two minutes.</span>
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Every one of those reviews is for this work — same owner, same crew, same bay on Vista
-            Alameda. Below: what customers say, what a detail here actually involves, then three
-            packages priced by vehicle size. Pick a time that fits the whole job
+            This is the shop those reviews are about — same owner, same crew, same bay on Vista
+            Alameda. Three packages priced by vehicle size
+            {from != null && (
+              <>
+                , from <strong className="font-semibold text-foreground">{money(from)}</strong>
+              </>
+            )}
+            . Pick a time that fits the whole job
             {deposit ? (
               <>
                 , hold it with a{" "}
@@ -218,8 +223,7 @@ function Hero({
             ) : (
               ","
             )}{" "}
-            and pay the rest at pickup. Same crew, same bay on Vista Alameda that the Google reviews
-            are about.
+            and pay the rest at pickup.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
