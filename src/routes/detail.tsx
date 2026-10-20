@@ -122,12 +122,16 @@ function DetailingLanding() {
       )}
       <LandingHeader phone={phone} />
       <main id="main" className="pb-24 lg:pb-0">
+        {/* Sales order (owner's call 2026-10-20): proof first, then the value,
+            then the price, then the close — a cold click sees the reviews and
+            the work before it sees a number, and the booking form sits right
+            under the packages so the price and the close are one scroll. */}
         <Hero phone={phone} menu={menu} deposit={deposit} />
-        <Packages menu={menu} onPick={pick} />
-        <Book preset={preset} presetKey={presetKey} deposit={deposit} phone={phone} />
+        <Proof />
         <TheProblem />
         <Included />
-        <Proof />
+        <Packages menu={menu} onPick={pick} />
+        <Book preset={preset} presetKey={presetKey} deposit={deposit} phone={phone} />
         <Objections />
         <Close phone={phone} form={formProps} />
       </main>
@@ -197,13 +201,14 @@ function Hero({
           </p>
 
           <h1 className="mt-4 text-[clamp(2.4rem,6.4vw,4.1rem)]">
-            A proper detail, priced up front.{" "}
-            <span className="text-accent">Book it in two minutes.</span>
+            The detail shop Albuquerque rates {site.reviews.rating.toFixed(1)}.{" "}
+            <span className="text-accent">Prices up front, booked online.</span>
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Three packages, priced by the size of your vehicle — the number you see is the number
-            you pay. Pick a time that fits the whole job
+            Every one of those reviews is for this work — same owner, same crew, same bay on Vista
+            Alameda. Below: what customers say, what a detail here actually involves, then three
+            packages priced by vehicle size. Pick a time that fits the whole job
             {deposit ? (
               <>
                 , hold it with a{" "}
@@ -276,7 +281,7 @@ function Packages({
       <div className="container-x">
         <Reveal>
           <p className="eyebrow">Packages &amp; prices</p>
-          <h2 className="mt-3 max-w-3xl">Pick the detail your car needs.</h2>
+          <h2 className="mt-3 max-w-3xl">You've seen the work. Here's what it costs.</h2>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             Every price is the full price for your vehicle size — no "starting at", no surprise at
             pickup. Not sure which size you are? Pick the closest; we confirm at drop-off before any
@@ -610,7 +615,7 @@ function Proof() {
           <p className="eyebrow">
             {site.reviews.count} reviews, {site.reviews.rating.toFixed(1)} stars
           </p>
-          <h2 className="mt-3 max-w-3xl">This is the work the reviews are about.</h2>
+          <h2 className="mt-3 max-w-3xl">Don't take our word for it.</h2>
           <p className="mt-4 max-w-2xl text-muted-foreground">
             {site.business.name} traded as {site.business.formerName} until the 2026 rebrand and
             built its rating on detailing — same owner, same crew, same Google profile.
@@ -647,6 +652,22 @@ function Proof() {
             </Reveal>
           ))}
         </div>
+
+        {/* Soft pull toward the price: the proof is the pitch, the packages
+            are the ask, and someone sold here shouldn't have to hunt. */}
+        <Reveal className="mt-8 flex flex-wrap items-center gap-3">
+          <a
+            href="#packages"
+            onClick={() => trackBookClick("landing-proof", SERVICE)}
+            className="btn btn-primary"
+          >
+            See what it costs
+            <ArrowRight className="h-4 w-4" />
+          </a>
+          <span className="text-sm text-muted-foreground">
+            Three packages, priced by vehicle size — no quote needed.
+          </span>
+        </Reveal>
       </div>
     </section>
   );
@@ -671,7 +692,7 @@ function Objections() {
     <section className="section-y-tight cv-auto border-t border-border">
       <div className="container-x">
         <Reveal>
-          <p className="eyebrow">Before you ask</p>
+          <p className="eyebrow">Before you book</p>
           <h2 className="mt-3">Straight answers.</h2>
         </Reveal>
         <div className="mt-9 grid gap-x-12 gap-y-8 lg:grid-cols-2">
