@@ -162,6 +162,10 @@ ShopFlow → Settings → Meet the Team and they appear without a deploy.
   - Do you pick up / drop off at the lot, and how far out?
   - How do dealers pay — per car, or a monthly invoice by stock number (net 30)?
   - A realistic turnaround per service for dealer cars
+  - **Dealer clients — confirmed 2026-10-20 ✅.** The page names Mercedes-Benz,
+    Porsche, Audi, Infiniti and GMC dealerships (text only, no logos — logos
+    would read as the manufacturer endorsing Evo). Tell us the moment any of
+    that work stops and it comes off `site.dealerClients`.
 
 ## 7. Tracking
 

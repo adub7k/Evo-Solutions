@@ -1,15 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
-  Building2,
-  Car,
   ClipboardList,
+  Droplets,
   Phone,
   ShieldCheck,
   Sparkles,
   SunDim,
-  Truck,
-  Droplets,
+  Wand2,
 } from "lucide-react";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
@@ -32,9 +30,8 @@ import { trackPhoneClick } from "@/lib/analytics";
 import { seo, faqLd, serviceLd, breadcrumbLd } from "@/lib/seo";
 
 const PATH = "/dealer";
-const TITLE = "Dealer Program — Tint, PPF, Coating & Recon in Albuquerque | Evo Solutions";
-const DESCRIPTION =
-  "Window tint, paint protection film, ceramic coating and detailing for Albuquerque dealerships. One shop, all in-house, one call to set up an account.";
+const TITLE = "Dealer Detailing in Albuquerque — Correction, Tint, Coating & PPF | Evo Solutions";
+const DESCRIPTION = `Dealership detailing in Albuquerque, plus paint correction, window tint, ceramic coating and PPF. Working with ${listBrands(site.dealerClients)} dealerships.`;
 const CRUMBS = [
   { name: "Home", path: "/" },
   { name: "For Dealers", path: PATH },
@@ -47,7 +44,34 @@ const CRUMBS = [
  * discounts, pickup, invoicing or turnaround — those come from
  * `site.dealerTerms` and render only once Angelo has confirmed them.
  */
+/** The headline service — detailing is most of what Evo does for dealers. */
+const detailing = {
+  icon: Sparkles,
+  title: "Detailing & recon",
+  to: "/auto-detailing",
+  body: "Most of what we do for dealers. New cars detailed for delivery, trade-ins and auction buys brought back to front-line ready — the work this shop was built on, and where the Google reviews came from.",
+  points: [
+    "New-car delivery details",
+    "Used-car recon on trade-ins and auction buys",
+    "Interior deep clean, steam and extraction",
+    "Clay and iron decontamination",
+    "Odor, pet hair and engine bays",
+    "Sealant to finish",
+  ],
+};
+
 const offers = [
+  {
+    icon: Wand2,
+    title: "Paint correction",
+    to: "/auto-detailing",
+    body: "Machine polishing that takes out swirls, wash marring and lot scratches instead of hiding them under glaze — so the car looks right under showroom lights.",
+    points: [
+      "One-step polish for front-line units",
+      "Swirl and wash-mar removal",
+      "Prep before coating or PPF",
+    ],
+  },
   {
     icon: SunDim,
     title: "Window tint",
@@ -58,13 +82,6 @@ const offers = [
       site.tintSpecs.warranty,
       "Front two to match factory privacy glass",
     ],
-  },
-  {
-    icon: ShieldCheck,
-    title: "Paint protection film",
-    to: "/paint-protection-film",
-    body: "Clear, self-healing film over the panels that chip first. Easy to offer at delivery, and the paint underneath stays factory for trade-in.",
-    points: ["Partial front or full front", "Extended and full-body coverage", "Removable later"],
   },
   {
     icon: Droplets,
@@ -78,33 +95,11 @@ const offers = [
     ],
   },
   {
-    icon: Sparkles,
-    title: "Detailing & recon",
-    to: "/auto-detailing",
-    body: "Trade-ins and auction cars brought back to front-line ready. This is the work the shop was built on — it's where the Google reviews came from.",
-    points: [
-      "Interior deep clean, steam and extraction",
-      "Clay, iron decon and paint correction",
-      "Odor, pet hair and engine bays",
-    ],
-  },
-];
-
-const stores = [
-  {
-    icon: Building2,
-    label: "Franchise & new-car stores",
-    note: "Tint, PPF and coating as delivery add-ons, done before the customer picks up.",
-  },
-  {
-    icon: Car,
-    label: "Independent & used lots",
-    note: "Recon on trade-ins and auction buys so they photograph well and sell sooner.",
-  },
-  {
-    icon: Truck,
-    label: "Fleet & commercial vehicles",
-    note: "Tint and interior cleans for work trucks and vans, done in batches.",
+    icon: ShieldCheck,
+    title: "Paint protection film",
+    to: "/paint-protection-film",
+    body: "Clear, self-healing film over the panels that chip first. Easy to offer at delivery, and the paint underneath stays factory for trade-in.",
+    points: ["Partial front or full front", "Extended and full-body coverage", "Removable later"],
   },
 ];
 
@@ -119,7 +114,7 @@ const process = [
   },
   {
     title: "We do the work and check it",
-    body: "Tint, film, coating and detailing are all done in-house by the same crew — nothing is farmed out.",
+    body: "Detailing, correction, tint, coating and film are all done in-house by the same crew — nothing is farmed out.",
   },
   {
     title: "You get it back ready to sell",
@@ -129,12 +124,16 @@ const process = [
 
 const faqs = [
   {
+    q: "Which dealerships do you work with now?",
+    a: `We currently do work for ${listBrands(site.dealerClients)} dealerships — mostly detailing, with correction, tint, coating and PPF on top.`,
+  },
+  {
     q: "Do you have dealer pricing?",
     a: "Yes — rates are set per account, based on which services you use and how many cars a month. Send the form or call and Angelo will go through it with you.",
   },
   {
-    q: "Can you do tint, PPF, coating and a detail on the same car?",
-    a: "Yes. It's all done in-house at the one shop, so a car can come in for a detail and leave with film and coating too — no shuttling it between vendors.",
+    q: "Can you do a detail, correction, tint and coating on the same car?",
+    a: "Yes. It's all done in-house at the one shop, so a car can come in for a detail and leave corrected, coated and tinted — no shuttling it between vendors.",
   },
   {
     q: "Is the tint legal in New Mexico?",
@@ -150,6 +149,13 @@ const faqs = [
   },
 ];
 
+/** "A, B and C" */
+function listBrands(brands: string[]) {
+  return brands.length < 2
+    ? (brands[0] ?? "")
+    : `${brands.slice(0, -1).join(", ")} and ${brands[brands.length - 1]}`;
+}
+
 /** Owner-confirmed program terms only; empty until VERIFY.md items come back. */
 const terms = Object.values(site.dealerTerms).filter((t): t is string => !!t);
 
@@ -161,7 +167,7 @@ export const Route = createFileRoute("/dealer")({
       scripts: [
         {
           type: "application/ld+json",
-          children: serviceLd("Dealer vehicle services", DESCRIPTION, PATH),
+          children: serviceLd("Dealer detailing", DESCRIPTION, PATH),
         },
         { type: "application/ld+json", children: faqLd(faqs) },
         { type: "application/ld+json", children: breadcrumbLd(CRUMBS) },
@@ -172,8 +178,8 @@ export const Route = createFileRoute("/dealer")({
 });
 
 function DealerPage() {
-  const fallback = images.service.service_ppf;
-  const heroSrc = useSiteImage("service_ppf", fallback.webp);
+  const fallback = images.service.service_detail;
+  const heroSrc = useSiteImage("service_detail", fallback.webp);
 
   return (
     <SiteLayout>
@@ -184,11 +190,12 @@ function DealerPage() {
           <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
             <div className="animate-rise">
               <p className="eyebrow">Dealer Program · Albuquerque</p>
-              <h1 className="mt-4">Tint, film, coating and recon. One shop, one call.</h1>
+              <h1 className="mt-4">Dealer detailing, done to a showroom standard.</h1>
               <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-                Evo Solutions does window tint, paint protection film, ceramic coating and detailing
-                for Albuquerque dealerships — all in-house, by the same crew. Send the car, tell us
-                what it needs, and get it back ready for the front line.
+                We detail cars for {listBrands(site.dealerClients)} dealerships. Detailing is the
+                core of it — paint correction, window tint, ceramic coating and PPF are done
+                in-house by the same crew when a car needs more. Send the car, tell us what it
+                needs, and get it back ready for the front line.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -225,10 +232,36 @@ function DealerPage() {
         <div className="container-x">
           <SectionHead
             eyebrow="What we offer dealers"
-            title="Everything a car needs between the auction and the front line."
-            body="Four services, one shop. Use one or all of them."
+            title="Detailing first. Everything else under the same roof."
+            body="Most dealer cars just need a proper detail. When one needs more, it doesn't leave the shop."
           />
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
+
+          <Reveal className="panel mt-10 grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+            <div>
+              <detailing.icon className="h-7 w-7 text-accent" />
+              <h3 className="mt-4 font-display text-3xl font-semibold">{detailing.title}</h3>
+              <p className="mt-3 text-[1.0625rem] leading-relaxed text-muted-foreground">
+                {detailing.body}
+              </p>
+              <Link
+                to={detailing.to}
+                className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-accent"
+              >
+                More on detailing
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <ul className="grid content-center gap-3 text-[0.9375rem]">
+              {detailing.points.map((p) => (
+                <li key={p} className="flex gap-2.5">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+
+          <div className="mt-5 grid gap-5 md:grid-cols-2">
             {offers.map((o, i) => (
               <Reveal key={o.title} delay={i * 50} className="panel flex flex-col p-6 sm:p-8">
                 <o.icon className="h-6 w-6 text-accent" />
@@ -256,20 +289,31 @@ function DealerPage() {
         </div>
       </Section>
 
+      {/* Brand names as plain text, never logos — see site.dealerClients. */}
       <Section>
         <div className="container-x">
-          <SectionHead eyebrow="Who we work with" title="Big store or small lot." />
-          <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-3">
-            {stores.map((st, i) => (
-              <Reveal key={st.label} delay={i * 40} className="flex gap-4">
-                <st.icon className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-                <div>
-                  <h3 className="font-display text-lg font-semibold">{st.label}</h3>
-                  <p className="mt-1 leading-relaxed text-muted-foreground">{st.note}</p>
-                </div>
+          <SectionHead
+            eyebrow="Who we work for"
+            title="Dealerships we work for now."
+            body="Big franchise store or small used lot — the same crew and the same standard."
+          />
+          <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {site.dealerClients.map((b, i) => (
+              <Reveal
+                as="li"
+                key={b}
+                delay={i * 40}
+                className="panel grid place-items-center px-3 py-6 text-center"
+              >
+                <span className="whitespace-nowrap font-display text-lg font-semibold xl:text-xl">
+                  {b}
+                </span>
+                <span className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+                  dealerships
+                </span>
               </Reveal>
             ))}
-          </div>
+          </ul>
         </div>
       </Section>
 
@@ -279,7 +323,8 @@ function DealerPage() {
             <SectionHead eyebrow="Why dealers use Evo" title="Fewer vendors, fewer surprises." />
             <IncludedList
               items={[
-                "Tint, PPF, coating and detailing all in-house",
+                "Detailing first — the work the shop was built on",
+                "Correction, tint, coating and PPF all in-house too",
                 `${site.reviews.rating.toFixed(1)} stars across ${site.reviews.count} Google reviews`,
                 "Tint shade checked against New Mexico law",
                 `${site.filmBrands.join(" and ")} film`,

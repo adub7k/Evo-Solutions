@@ -23,10 +23,11 @@ const SERVICE = "Dealer Program";
 
 /** Label on the form → ShopFlow lead-form option (must match exactly). */
 const SERVICES: { label: string; leadValue: string }[] = [
-  { label: "Window tint", leadValue: "Window tint" },
-  { label: "Paint protection film", leadValue: "PPF" },
-  { label: "Ceramic coating", leadValue: "Ceramic Coating" },
   { label: "Detailing / recon", leadValue: "Detail" },
+  { label: "Paint correction", leadValue: "Detail" },
+  { label: "Window tint", leadValue: "Window tint" },
+  { label: "Ceramic coating", leadValue: "Ceramic Coating" },
+  { label: "Paint protection film", leadValue: "PPF" },
 ];
 
 const VOLUME = ["1–5 a month", "6–15 a month", "16–30 a month", "30+ a month", "Not sure yet"];

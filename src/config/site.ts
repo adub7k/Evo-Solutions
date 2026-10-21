@@ -186,6 +186,15 @@ export const site = {
    * each exactly as it should read, e.g.
    *   pickup: "We pick up and drop off at lots inside Albuquerque city limits"
    */
+  /**
+   * Dealerships Evo currently does work for — CONFIRMED 2026-10-20 (owner
+   * side, via the site's maintainer). Named as "<brand> dealerships" in plain
+   * text only: no manufacturer logos, which would read as an endorsement by
+   * Mercedes-Benz AG, Porsche etc. rather than "we work for their stores".
+   * Take a brand off the moment the work stops.
+   */
+  dealerClients: ["Mercedes-Benz", "Porsche", "Audi", "Infiniti", "GMC"],
+
   dealerTerms: {
     pricing: null as string | null, // e.g. "Volume rates from 5 vehicles a month"
     pickup: null as string | null,
