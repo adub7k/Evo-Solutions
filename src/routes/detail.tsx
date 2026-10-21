@@ -11,6 +11,7 @@ import {
   Star,
 } from "lucide-react";
 
+import { AddonInfo } from "@/components/site/AddonInfo";
 import { BookingForm } from "@/components/site/BookingForm";
 import { LandingHeader, OfferBar, StickyBar } from "@/components/site/LandingChrome";
 import { LandingLeadForm } from "@/components/site/LandingLeadForm";
@@ -346,10 +347,11 @@ function Packages({
                     {g.items.map((a) => (
                       <li
                         key={a.id}
-                        className="flex items-baseline justify-between gap-4 text-muted-foreground"
+                        className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground"
                       >
                         <span>{a.name}</span>
-                        <span className="font-display font-semibold tabular-nums text-foreground">
+                        <AddonInfo text={a.description} name={a.name} />
+                        <span className="ml-auto font-display font-semibold tabular-nums text-foreground">
                           +{money(a.price)}
                         </span>
                       </li>

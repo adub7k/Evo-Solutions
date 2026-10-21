@@ -14,6 +14,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Clock, Loader2, Phone, ShieldCheck } from "lucide-react";
 
+import { AddonInfo } from "@/components/site/AddonInfo";
 import { Input } from "@/components/site/LandingLeadForm";
 import { site } from "@/config/site";
 import {
@@ -514,11 +515,11 @@ function BookingStages({
                       return (
                         <label
                           key={a.id}
-                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm transition-colors ${
+                          className={`flex cursor-pointer flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-4 py-3 text-sm transition-colors ${
                             on ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2"
                           }`}
                         >
-                          <span className="flex items-center gap-3">
+                          <span className="flex min-w-0 items-center gap-3">
                             <input
                               type="checkbox"
                               checked={on}
@@ -531,7 +532,9 @@ function BookingStages({
                             />
                             {a.name}
                           </span>
-                          <span className="text-muted-foreground">+{money(a.price)}</span>
+                          {/* "What is this?" — the owner's note, tap to read. */}
+                          <AddonInfo text={a.description} name={a.name} />
+                          <span className="ml-auto text-muted-foreground">+{money(a.price)}</span>
                         </label>
                       );
                     })}

@@ -50,6 +50,8 @@ export type BookingAddOn = {
   slug: string;
   /** The owner's own heading for it in ShopFlow ("Interior", "Exterior"); "" = ungrouped. */
   group: string;
+  /** The owner's one-or-two-sentence "what it is", shown as a tap-to-read note; "" = none. */
+  description: string;
 };
 
 /**
@@ -185,6 +187,7 @@ function toMenu(info: Record<string, unknown>, wanted: readonly string[]): Booki
       price,
       slug: match[1],
       group: String(a.group ?? "").trim(),
+      description: String(a.description ?? "").trim(),
     });
   }
 
