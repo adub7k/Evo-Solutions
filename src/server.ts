@@ -50,6 +50,7 @@ function buildSitemap(): string {
     { path: "/reviews", priority: "0.6", changefreq: "monthly" },
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/contact", priority: "0.6", changefreq: "monthly" },
+    { path: "/dealer", priority: "0.7", changefreq: "monthly" },
     { path: "/tint-laws-new-mexico", priority: "0.8", changefreq: "yearly" },
     { path: "/guides", priority: "0.6", changefreq: "weekly" },
     ...guides.map((g) => ({ path: `/guides/${g.slug}`, priority: "0.5", changefreq: "yearly" })),

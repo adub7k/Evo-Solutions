@@ -176,6 +176,23 @@ export const site = {
     warranty: null as string | null, // {{PPF_WARRANTY_TEXT}}
   },
 
+  /**
+   * Dealer program terms (/dealer) — NOTHING owner-supplied yet.
+   *
+   * The page sells the work Evo already does and says rates are set per
+   * account. Each line below renders as a "program terms" item ONLY when it's
+   * a string, so no invented discount, pickup service, invoicing terms or
+   * turnaround reaches a dealer until Angelo confirms it (VERIFY.md). Write
+   * each exactly as it should read, e.g.
+   *   pickup: "We pick up and drop off at lots inside Albuquerque city limits"
+   */
+  dealerTerms: {
+    pricing: null as string | null, // e.g. "Volume rates from 5 vehicles a month"
+    pickup: null as string | null,
+    invoicing: null as string | null, // e.g. "One monthly invoice by stock number, net 30"
+    turnaround: null as string | null,
+  },
+
   serviceArea: {
     primary: "Albuquerque, New Mexico",
     /** Confirmed by Angelo as within normal travel for commercial work. */

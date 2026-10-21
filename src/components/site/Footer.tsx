@@ -94,6 +94,7 @@ export function Footer() {
             <FooterLink to="/reviews">Reviews</FooterLink>
             <FooterLink to="/about">About Evo</FooterLink>
             <FooterLink to="/contact">Contact & Directions</FooterLink>
+            <FooterLink to="/dealer">For Dealers</FooterLink>
             <FooterLink to="/quote">Get a Quote</FooterLink>
           </FooterCol>
 

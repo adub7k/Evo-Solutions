@@ -153,6 +153,15 @@ ShopFlow → Settings → Meet the Team and they appear without a deploy.
   both are now named on the window tint and PPF pages. We state that you install
   them, not that you're an authorised or exclusive dealer — send the dealer
   paperwork if you have it and we can say more.
+- **Dealer program (`/dealer`, added 2026-10-20).** The page sells the work you
+  already do — tint, PPF, coating, detailing — to dealerships and says rates are
+  set per account after a call. It makes **no** promise about discounts, pickup
+  and delivery, invoicing terms or turnaround. Send any of those and each goes
+  into `site.dealerTerms` and appears as a "program terms" line on the page:
+  - Is there a standard dealer rate or volume tier?
+  - Do you pick up / drop off at the lot, and how far out?
+  - How do dealers pay — per car, or a monthly invoice by stock number (net 30)?
+  - A realistic turnaround per service for dealer cars
 
 ## 7. Tracking
 

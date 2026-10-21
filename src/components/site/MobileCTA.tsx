@@ -14,6 +14,7 @@ import { trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
  *  • hidden while the quote form itself is on screen — no point pointing at
  *    something the visitor is already looking at
  *  • hidden entirely on /quote
+ *  • on /dealer it points at the dealer account form, not the retail quote
  *
  * SiteLayout adds matching bottom padding so it can never cover content, and
  * the safe-area inset keeps it clear of the iOS home indicator.
@@ -21,20 +22,21 @@ import { trackPhoneClick, trackQuoteClick } from "@/lib/analytics";
 export function MobileCTA({ visible }: { visible: boolean }) {
   const [formInView, setFormInView] = useState(false);
   const { pathname } = useLocation();
+  const dealer = pathname === "/dealer";
 
   // Watch for the embedded quote block on whichever page we're on. Re-runs on
   // navigation because the element belongs to the page, not the layout.
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     setFormInView(false);
-    const target = document.getElementById("quote");
+    const target = document.getElementById(dealer ? "dealer-account" : "quote");
     if (!target) return;
     const io = new IntersectionObserver(([e]) => setFormInView(e.isIntersecting), {
       threshold: 0,
     });
     io.observe(target);
     return () => io.disconnect();
-  }, [pathname]);
+  }, [pathname, dealer]);
 
   if (pathname === "/quote" || pathname.startsWith("/book")) return null;
 
@@ -59,14 +61,24 @@ export function MobileCTA({ visible }: { visible: boolean }) {
           <Phone className="h-4 w-4" />
           Call
         </a>
-        <Link
-          to="/quote"
-          onClick={() => trackQuoteClick("sticky-bar")}
-          tabIndex={shown ? undefined : -1}
-          className="btn btn-primary flex-[1.4]"
-        >
-          Get My Free Quote
-        </Link>
+        {dealer ? (
+          <a
+            href="#dealer-account"
+            tabIndex={shown ? undefined : -1}
+            className="btn btn-primary flex-[1.4]"
+          >
+            Set up an account
+          </a>
+        ) : (
+          <Link
+            to="/quote"
+            onClick={() => trackQuoteClick("sticky-bar")}
+            tabIndex={shown ? undefined : -1}
+            className="btn btn-primary flex-[1.4]"
+          >
+            Get My Free Quote
+          </Link>
+        )}
       </div>
     </div>
   );
